@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo apt:*)",
+      "Bash(export PATH=\"$PATH:$HOME/.local/bin\")",
+      "Bash(python3 manage.py makemigrations)",
+      "Bash(sudo -u postgres psql -c \"CREATE USER maram_user WITH PASSWORD 'maram_password';\")",
+      "Bash(sudo -u postgres psql -c \"CREATE DATABASE maram_db OWNER maram_user;\")",
+      "Bash(sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE maram_db TO maram_user;\")"
+    ]
+  }
+}

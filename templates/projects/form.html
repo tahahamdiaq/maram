@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ action }} un projet – Maram{% endblock %}
+{% block page_title %}{{ action }} un projet{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'project_list' %}">Projets</a></li>
+        {% if project %}<li class="breadcrumb-item"><a href="{% url 'project_detail' project.pk %}">{{ project.bon_commande_number }}</a></li>{% endif %}
+        <li class="breadcrumb-item active">{{ action }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <form method="post" id="projectForm">
+    {% csrf_token %}
+
+    <!-- ── Section 1 : Identité ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-info-circle me-2"></i><strong>Identité du projet</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">{{ form.name|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.bon_commande_number|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.bon_commande_date|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.gouvernorat|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.maitre_ouvrage_type|as_crispy_field }}</div>
+          <div class="col-md-8">{{ form.maitre_ouvrage|as_crispy_field }}</div>
+          <datalist id="maitre-ouvrage-list">
+            <option value="DRE Tunis"></option>
+            <option value="DRE Sfax"></option>
+            <option value="CRE Sousse"></option>
+          </datalist>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 2 : Spécialités & Ingénieurs ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-tools me-2"></i><strong>Spécialités et ingénieurs</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Spécialités *</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                {{ form.has_structure }} <label class="form-check-label" for="{{ form.has_structure.id_for_label }}">Structure</label>
+              </div>
+              <div class="form-check">
+                {{ form.has_electricite }} <label class="form-check-label" for="{{ form.has_electricite.id_for_label }}">Électricité</label>
+              </div>
+              <div class="form-check">
+                {{ form.has_fluide }} <label class="form-check-label" for="{{ form.has_fluide.id_for_label }}">Fluide</label>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">{{ form.engineers|as_crispy_field }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 3 : DAO ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-folder me-2"></i><strong>Phase 1 – DAO</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4" id="row-dao-structure">{{ form.dao_structure|as_crispy_field }}</div>
+          <div class="col-md-4" id="row-dao-electricite">{{ form.dao_electricite|as_crispy_field }}</div>
+          <div class="col-md-4" id="row-dao-fluide">{{ form.dao_fluide|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.dao_completed_date|as_crispy_field }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 4 : D0 ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-file-earmark me-2"></i><strong>Dossier D0</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-md-3">
+            <div class="form-check form-switch">
+              {{ form.d0_done }}
+              <label class="form-check-label" for="{{ form.d0_done.id_for_label }}">D0 réalisé</label>
+            </div>
+          </div>
+          <div class="col-md-4">{{ form.d0_date|as_crispy_field }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 5 : EXE ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-gear me-2"></i><strong>Phase 2 – EXE</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4" id="row-exe-structure">{{ form.exe_structure|as_crispy_field }}</div>
+          <div class="col-md-4" id="row-exe-electricite">{{ form.exe_electricite|as_crispy_field }}</div>
+          <div class="col-md-4" id="row-exe-fluide">{{ form.exe_fluide|as_crispy_field }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 6 : Visites ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-eye me-2"></i><strong>Visites</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">{{ form.planned_visits|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.completed_visits|as_crispy_field }}</div>
+          <div class="col-md-4 d-flex align-items-end pb-2">
+            <div id="visitPercentage" class="text-muted small"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 7 : D6 & Réceptions ── -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-clipboard-check me-2"></i><strong>D6, RPRO et RDEF</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-md-2">
+            <div class="form-check form-switch">
+              {{ form.d6_done }}
+              <label class="form-check-label" for="{{ form.d6_done.id_for_label }}">D6 réalisé</label>
+            </div>
+          </div>
+          <div class="col-md-3">{{ form.d6_date|as_crispy_field }}</div>
+
+          <div class="col-md-2 offset-md-1">
+            <div class="form-check form-switch">
+              {{ form.rpro }}
+              <label class="form-check-label" for="{{ form.rpro.id_for_label }}">RPRO</label>
+            </div>
+          </div>
+          <div class="col-md-2">{{ form.rpro_date|as_crispy_field }}</div>
+
+          <div class="col-md-2">
+            <div class="form-check form-switch">
+              {{ form.rdef }}
+              <label class="form-check-label" for="{{ form.rdef.id_for_label }}">RDEF</label>
+            </div>
+          </div>
+          <div class="col-md-2">{{ form.rdef_date|as_crispy_field }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">
+        <i class="bi bi-save me-1"></i>{{ action }} le projet
+      </button>
+      <a href="{% if project %}{% url 'project_detail' project.pk %}{% else %}{% url 'project_list' %}{% endif %}"
+         class="btn btn-outline-secondary">Annuler</a>
+    </div>
+
+    <!-- Non-field errors -->
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mt-3">{{ form.non_field_errors }}</div>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update visit percentage display
+function updateVisitPct() {
+  const planned = parseInt($('#id_planned_visits').val()) || 0;
+  const done    = parseInt($('#id_completed_visits').val()) || 0;
+  if (planned > 0) {
+    const pct = Math.round(done / planned * 100);
+    $('#visitPercentage').html(`<span class="badge ${pct >= 100 ? 'bg-success' : pct >= 50 ? 'bg-info text-dark' : 'bg-warning text-dark'}">${pct}% réalisé</span>`);
+  } else {
+    $('#visitPercentage').html('');
+  }
+}
+$('#id_planned_visits, #id_completed_visits').on('input', updateVisitPct);
+updateVisitPct();
+
+// Show/hide DAO/EXE fields based on selected specialties
+function toggleSpecialtyFields() {
+  const str  = $('#id_has_structure').is(':checked');
+  const elec = $('#id_has_electricite').is(':checked');
+  const fl   = $('#id_has_fluide').is(':checked');
+
+  $('#row-dao-structure, #row-exe-structure').toggle(str);
+  $('#row-dao-electricite, #row-exe-electricite').toggle(elec);
+  $('#row-dao-fluide, #row-exe-fluide').toggle(fl);
+}
+$('#id_has_structure, #id_has_electricite, #id_has_fluide').on('change', toggleSpecialtyFields);
+toggleSpecialtyFields();
+</script>
+{% endblock %}

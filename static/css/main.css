@@ -1,0 +1,203 @@
+/* ═══════════════════════════════════════════════
+   Maram – Main Stylesheet
+   ═══════════════════════════════════════════════ */
+
+/* ── Layout ── */
+#wrapper {
+  min-height: 100vh;
+}
+
+#sidebar {
+  width: 240px;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: width .25s ease;
+}
+
+#sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
+}
+
+#page-content-wrapper {
+  min-width: 0;
+}
+
+/* ── Sidebar Nav ── */
+.sidebar-nav .nav-link {
+  color: rgba(255, 255, 255, .75);
+  padding: .6rem 1rem;
+  border-radius: .375rem;
+  margin: 2px 8px;
+  font-size: .88rem;
+  transition: background .15s, color .15s;
+}
+
+.sidebar-nav .nav-link:hover {
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+}
+
+.sidebar-nav .nav-link.active {
+  background: rgba(13, 110, 253, .8);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Status Badges ── */
+.badge-status {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-non_prevu  { background: #dee2e6; color: #495057; }
+.status-non_recu   { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+.status-non_approuve { background: #fff3cd; color: #664d03; border: 1px solid #ffecb5; }
+.status-en_cours   { background: #cff4fc; color: #055160; border: 1px solid #b6effb; }
+.status-approuve   { background: #d1e7dd; color: #0a3622; border: 1px solid #badbcc; }
+
+/* ── Specialty Badges ── */
+.spec-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.spec-str  { background: #dbeafe; color: #1d4ed8; }
+.spec-elec { background: #fef9c3; color: #854d0e; }
+.spec-fl   { background: #dcfce7; color: #166534; }
+
+/* ── Notification Bell Animation ── */
+@keyframes bell-ring {
+  0%, 100% { transform: rotate(0); }
+  10%, 30%, 50% { transform: rotate(-15deg); }
+  20%, 40%, 60% { transform: rotate(15deg); }
+  70% { transform: rotate(0); }
+}
+
+.bell-ring .bi-bell-fill,
+.bell-ring .bi-bell {
+  animation: bell-ring 1.5s ease infinite;
+  display: inline-block;
+}
+
+/* ── Blink animation (critical) ── */
+@keyframes blink-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+.blink {
+  animation: blink-anim 1s step-start infinite;
+}
+
+/* ── Notification Dropdown ── */
+.notif-dropdown {
+  border-radius: .5rem;
+  overflow: hidden;
+}
+
+.notif-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  color: #333;
+  transition: background .12s;
+}
+
+.notif-item:hover {
+  background: #f8f9fa;
+}
+
+.notif-critique {
+  background: #fff5f5;
+  border-left: 3px solid #dc3545 !important;
+}
+
+.notif-important {
+  background: #fffbf0;
+  border-left: 3px solid #ffc107 !important;
+}
+
+.notif-normal {
+  background: #f8faff;
+}
+
+.notif-msg {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* ── Notification Rows in list page ── */
+.notif-critique-row {
+  background: #fff5f5;
+  border-left: 4px solid #dc3545;
+}
+
+/* ── Projects Table ── */
+.projects-table th {
+  font-size: .78rem;
+  white-space: nowrap;
+}
+
+.projects-table td {
+  font-size: .82rem;
+  vertical-align: middle;
+}
+
+/* ── Stat Icon Box ── */
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Observations ── */
+.obs-auto {
+  background: #f8f9fa;
+  border-left: 3px solid #dee2e6;
+}
+
+.obs-auto .obs-text {
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* ── Invoice Block ── */
+.invoice-block:last-child {
+  border-bottom: none !important;
+}
+
+/* ── Progress bar thin ── */
+.progress {
+  border-radius: 10px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  #sidebar {
+    width: 0;
+    position: fixed;
+    z-index: 1000;
+  }
+  #sidebar.mobile-open {
+    width: 240px;
+  }
+}

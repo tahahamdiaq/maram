@@ -1,0 +1,62 @@
+databases:
+  - name: maram-db
+    databaseName: maram_db
+    user: maram_user
+    plan: free
+
+services:
+  - type: web
+    name: maram
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn maram_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DB_NAME
+        fromDatabase:
+          name: maram-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: maram-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: maram-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: maram-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: maram-db
+          property: port
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@maram.tn
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: noreply@maram.tn

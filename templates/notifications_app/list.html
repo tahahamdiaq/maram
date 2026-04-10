@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Notifications – Maram{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+
+  <!-- Stats row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm border-start border-danger border-3">
+        <div class="card-body py-2">
+          <div class="h5 mb-0 text-danger fw-bold">{{ notifications|length }}</div>
+          <div class="text-muted small">Notifications total</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body py-2 d-flex gap-2 align-items-center">
+          <form method="post" action="{% url 'mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-check2-all me-1"></i>Tout marquer comme lu
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <form method="get" class="row g-2">
+        <div class="col-md-3">
+          <select name="priority" class="form-select form-select-sm">
+            <option value="">Toutes priorités</option>
+            <option value="critique" {% if priority_filter == 'critique' %}selected{% endif %}>Critiques</option>
+            <option value="important" {% if priority_filter == 'important' %}selected{% endif %}>Importantes</option>
+            <option value="normal" {% if priority_filter == 'normal' %}selected{% endif %}>Normales</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="status" class="form-select form-select-sm">
+            <option value="">Tous statuts</option>
+            <option value="unread" {% if status_filter == 'unread' %}selected{% endif %}>Non lues</option>
+            <option value="read" {% if status_filter == 'read' %}selected{% endif %}>Lues</option>
+            <option value="processed" {% if status_filter == 'processed' %}selected{% endif %}>Traitées</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i>Filtrer</button>
+          <a href="{% url 'notification_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notifications list -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      {% for n in notifications %}
+        <div class="notif-row d-flex gap-3 p-3 border-bottom align-items-start
+                    {% if n.priority == 'critique' and n.status == 'unread' %}notif-critique-row{% endif %}">
+          <!-- Priority icon -->
+          <div class="notif-icon-lg mt-1">
+            <i class="bi {{ n.priority_icon }} fs-4
+               {% if n.priority == 'critique' %}text-danger {% if n.status == 'unread' %}blink{% endif %}
+               {% elif n.priority == 'important' %}text-warning
+               {% else %}text-info{% endif %}"></i>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <span class="badge bg-{{ n.priority_color }} me-1">{{ n.get_priority_display }}</span>
+                <span class="badge bg-light text-dark border">{{ n.get_notification_type_display }}</span>
+                {% if n.status == 'unread' %}<span class="badge bg-dark ms-1">Non lue</span>{% endif %}
+                {% if n.status == 'processed' %}<span class="badge bg-secondary ms-1">Traitée</span>{% endif %}
+              </div>
+              <span class="text-muted small">{{ n.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <p class="mb-1 mt-2 fw-semibold">{{ n.message }}</p>
+            <div class="small text-muted">
+              <i class="bi bi-folder2 me-1"></i>
+              <a href="{% url 'project_detail' n.project_id %}" class="text-decoration-none">
+                {{ n.project.name }}
+              </a>
+              &nbsp;–&nbsp; {{ n.project.bon_commande_number }}
+              &nbsp;–&nbsp; {{ n.project.get_gouvernorat_display }}
+            </div>
+            {% if n.email_sent %}
+              <div class="small text-success mt-1">
+                <i class="bi bi-envelope-check me-1"></i>Email envoyé le {{ n.email_sent_at|date:"d/m/Y H:i" }}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex flex-column gap-1">
+            {% if n.status == 'unread' %}
+              <form method="post" action="{% url 'notification_mark_read' n.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marquer comme lue">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </form>
+            {% endif %}
+            {% if n.status != 'processed' %}
+              <form method="post" action="{% url 'notification_mark_processed' n.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-success" title="Marquer comme traitée">
+                  <i class="bi bi-check2"></i>
+                </button>
+              </form>
+            {% endif %}
+            <a href="{% url 'project_detail' n.project_id %}" class="btn btn-sm btn-outline-primary" title="Voir le projet">
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+          Aucune notification à afficher.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Paramètres notifications – Maram{% endblock %}
+{% block page_title %}Paramètres des notifications{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+  <form method="post">
+    {% csrf_token %}
+    {% for obj, label in settings_list %}
+    {% with prefix="ns_"|add:obj.notification_type %}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center
+                  {% if obj.notification_type == 'facture1_j2' or obj.notification_type == 'facture1_overdue' %}bg-danger text-white
+                  {% elif obj.notification_type == 'facture1_j7' or obj.notification_type == 'facture3_ready' %}bg-warning
+                  {% else %}bg-light{% endif %}">
+        <strong>{{ label }}</strong>
+        <div class="form-check form-switch mb-0">
+          <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
+                 {% if obj.is_active %}checked{% endif %}>
+          <label class="form-check-label" for="{{ prefix }}_active">Actif</label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Canal</label>
+            <select name="{{ prefix }}_channel" class="form-select form-select-sm">
+              <option value="both" {% if obj.channel == 'both' %}selected{% endif %}>Application + Email</option>
+              <option value="app" {% if obj.channel == 'app' %}selected{% endif %}>Application seulement</option>
+              <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Destinataires</label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
+                     id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
+              <label class="form-check-label small" for="{{ prefix }}_engineers">Ingénieurs du projet</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" name="{{ prefix }}_billing"
+                     id="{{ prefix }}_billing" {% if obj.send_to_billing_manager %}checked{% endif %}>
+              <label class="form-check-label small" for="{{ prefix }}_billing">Responsable facturation</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" name="{{ prefix }}_admin"
+                     id="{{ prefix }}_admin" {% if obj.send_to_admin %}checked{% endif %}>
+              <label class="form-check-label small" for="{{ prefix }}_admin">Administrateur</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Emails supplémentaires</label>
+            <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="2"
+                      placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-save me-1"></i>Enregistrer les paramètres
+    </button>
+  </form>
+</div>
+{% endblock %}
