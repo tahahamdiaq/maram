@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+import dj_database_url
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -8,7 +10,6 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 # Render deployment
-import os
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -59,16 +60,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'maram_project.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='maram_db'),
-        'USER': config('DB_USER', default='maram_user'),
-        'PASSWORD': config('DB_PASSWORD', default='maram_password'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+# Database – use DATABASE_URL on Render, individual vars locally
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='maram_db'),
+            'USER': config('DB_USER', default='maram_user'),
+            'PASSWORD': config('DB_PASSWORD', default='maram_password'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5433'),
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
