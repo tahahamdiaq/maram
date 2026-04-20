@@ -9,7 +9,7 @@ services:
     name: maram
     runtime: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn maram_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+    startCommand: "bash start.sh"
     plan: free
     envVars:
       - key: PYTHON_VERSION
