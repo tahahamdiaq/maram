@@ -63,6 +63,17 @@
 .status-en_cours   { background: #cff4fc; color: #055160; border: 1px solid #b6effb; }
 .status-approuve   { background: #d1e7dd; color: #0a3622; border: 1px solid #badbcc; }
 
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+.badge-status.status-non_recu,
+.badge-status.status-non_approuve,
+.badge-status.status-en_cours {
+  animation: badge-pulse 1.4s ease-in-out infinite;
+}
+
 /* ── Specialty Badges ── */
 .spec-badge {
   display: inline-block;
@@ -149,9 +160,20 @@
 }
 
 /* ── Projects Table ── */
+.projects-table-wrapper {
+  max-height: calc(100vh - 320px);
+  overflow: auto;
+}
+
 .projects-table th {
   font-size: .78rem;
   white-space: nowrap;
+}
+
+.projects-table thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .projects-table td {

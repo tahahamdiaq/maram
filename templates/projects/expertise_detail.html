@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% block title %}{{ expertise.name }} – Maram{% endblock %}
+{% block page_title %}{{ expertise.name }}{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+
+  <!-- Breadcrumb + Actions -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'expertise_list' %}">Expertises</a></li>
+        <li class="breadcrumb-item active">{{ expertise.bon_commande_number }}</li>
+      </ol>
+    </nav>
+    <div class="d-flex gap-2">
+      <a href="{% url 'expertise_edit' expertise.pk %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil me-1"></i>Modifier
+      </a>
+      <a href="{% url 'expertise_delete' expertise.pk %}" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash me-1"></i>Supprimer
+      </a>
+    </div>
+  </div>
+
+  <!-- Active Notifications Banner -->
+  {% for n in notifications %}
+    <div class="alert alert-{{ n.priority_color }} d-flex align-items-start gap-2 py-2
+                {% if n.priority == 'critique' %}border-danger border-2{% endif %}" role="alert">
+      <i class="bi {{ n.priority_icon }} mt-1 {% if n.priority == 'critique' %}blink{% endif %}"></i>
+      <div class="flex-grow-1">
+        <strong>{{ n.get_notification_type_display }}</strong> – {{ n.message }}
+        <div class="small text-muted">{{ n.created_at|date:"d/m/Y H:i" }}</div>
+      </div>
+      <form method="post" action="{% url 'notification_mark_processed' n.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-secondary py-0" title="Marquer comme traitée">
+          <i class="bi bi-check2"></i>
+        </button>
+      </form>
+    </div>
+  {% endfor %}
+
+  <div class="row g-3">
+
+    <!-- Left Column -->
+    <div class="col-lg-8">
+
+      <!-- Identité -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-dark text-white py-2">
+          <i class="bi bi-info-circle me-2"></i><strong>Identité de l'expertise</strong>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="text-muted small">Intitulé</label>
+              <div class="fw-semibold">{{ expertise.name }}</div>
+            </div>
+            <div class="col-md-4">
+              <label class="text-muted small">N° Bon de commande</label>
+              <div class="fw-semibold">{{ expertise.bon_commande_number }}</div>
+            </div>
+            <div class="col-md-4">
+              <label class="text-muted small">Date réception BC</label>
+              <div>{{ expertise.bon_commande_date|date:"d/m/Y" }}</div>
+            </div>
+            <div class="col-md-4">
+              <label class="text-muted small">Gouvernorat</label>
+              <div>{{ expertise.get_gouvernorat_display }}</div>
+            </div>
+            <div class="col-md-4">
+              <label class="text-muted small">Maître d'ouvrage</label>
+              <div>
+                <span class="badge bg-secondary">{{ expertise.maitre_ouvrage_type }}</span>
+                {% if expertise.maitre_ouvrage_type == 'autre' %} {{ expertise.maitre_ouvrage }}{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small">Spécialités</label>
+              <div class="d-flex gap-2">
+                {% if expertise.has_structure %}<span class="spec-badge spec-str">Structure</span>{% endif %}
+                {% if expertise.has_electricite %}<span class="spec-badge spec-elec">Électricité</span>{% endif %}
+                {% if expertise.has_fluide %}<span class="spec-badge spec-fl">Fluide</span>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small">Ingénieurs</label>
+              <div class="d-flex flex-wrap gap-1">
+                {% for eng in expertise.engineers.all %}
+                  <span class="badge bg-light text-dark border">{{ eng.name }}</span>
+                {% empty %}
+                  <span class="text-muted">–</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dossier Status -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-dark text-white py-2">
+          <i class="bi bi-folder me-2"></i><strong>Dossier</strong>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+              <label class="text-muted small">Statut du dossier</label>
+              <div class="mt-1">
+                <span class="badge-status status-{{ expertise.dossier_status }}">
+                  {{ expertise.get_dossier_status_display }}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="text-muted small">Date de complétion</label>
+              <div>
+                {% if expertise.dossier_completed_date %}
+                  <i class="bi bi-check-circle-fill text-success me-1"></i>
+                  {{ expertise.dossier_completed_date|date:"d/m/Y" }}
+                {% else %}
+                  <span class="text-muted">–</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="text-muted small">Échéance facture (+60j)</label>
+              <div>
+                {% if expertise.invoice_due_date %}
+                  {% with days=expertise.invoice_days_remaining %}
+                    <span class="fw-semibold {% if days < 0 %}text-danger{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
+                      {{ expertise.invoice_due_date|date:"d/m/Y" }}
+                    </span>
+                    <div class="text-muted small">
+                      {% if days < 0 %}Retard de {{ days|cut:"-" }} jour(s)
+                      {% elif days == 0 %}Échéance aujourd'hui
+                      {% else %}{{ days }} jour(s) restants{% endif %}
+                    </div>
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted">–</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observations -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-dark text-white py-2">
+          <i class="bi bi-chat-text me-2"></i><strong>Observations / Historique</strong>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'expertise_observation_add' expertise.pk %}" class="mb-3">
+            {% csrf_token %}
+            <div class="row g-2">
+              <div class="col-md-3">
+                <input type="date" name="date" class="form-control form-control-sm" value="{% now 'Y-m-d' %}" required>
+              </div>
+              <div class="col-md-7">
+                <input type="text" name="text" class="form-control form-control-sm" placeholder="Ajouter une observation…" required>
+              </div>
+              <div class="col-md-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus"></i> Ajouter</button>
+              </div>
+            </div>
+          </form>
+          <div class="obs-list" style="max-height:300px; overflow-y:auto;">
+            {% for obs in observations %}
+              <div class="obs-item d-flex gap-2 py-2 border-bottom {% if obs.is_auto %}obs-auto{% endif %}">
+                <div class="obs-date text-muted small text-nowrap" style="min-width:80px;">
+                  {{ obs.date|date:"d/m/Y" }}
+                </div>
+                <div class="obs-text flex-grow-1 small">
+                  {% if obs.is_auto %}<i class="bi bi-robot text-muted me-1"></i>{% endif %}
+                  {{ obs.text }}
+                </div>
+                {% if not obs.is_auto %}
+                  <form method="post" action="{% url 'expertise_observation_delete' obs.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link btn-sm p-0 text-danger"
+                            onclick="return confirm('Supprimer cette observation ?')">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p class="text-muted small mb-0">Aucune observation.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left col -->
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+
+      <!-- Facture -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-dark text-white py-2">
+          <i class="bi bi-receipt me-2"></i><strong>Facture</strong>
+        </div>
+        <div class="card-body">
+          {% if invoice %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0 fw-semibold">
+                <i class="bi bi-receipt me-1"></i>Facture expertise
+                {% if invoice.is_complete %}
+                  <span class="badge bg-success ms-1 small">Complète</span>
+                {% elif invoice.is_established %}
+                  <span class="badge bg-info text-dark ms-1 small">Établie</span>
+                {% elif expertise.dossier_complete %}
+                  <span class="badge bg-warning text-dark ms-1 small">À établir</span>
+                {% endif %}
+              </h6>
+              <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-secondary btn-sm py-0">
+                <i class="bi bi-pencil"></i>
+              </a>
+            </div>
+            {% if invoice.establishment_date %}
+              <div class="small"><span class="text-muted">Établie :</span> <strong>{{ invoice.establishment_date|date:"d/m/Y" }}</strong></div>
+            {% else %}
+              <div class="small text-muted">Non établie</div>
+            {% endif %}
+            {% if invoice.transmission_date %}
+              <div class="small"><span class="text-muted">Transmise :</span> <strong>{{ invoice.transmission_date|date:"d/m/Y" }}</strong></div>
+            {% else %}
+              <div class="small text-muted">Non transmise</div>
+            {% endif %}
+            {% if invoice.notes %}
+              <div class="small text-muted mt-1">{{ invoice.notes }}</div>
+            {% endif %}
+
+            {% if expertise.dossier_complete and not invoice.is_complete %}
+              {% with days=expertise.invoice_days_remaining %}
+                {% if days is not None %}
+                  <div class="mt-2 p-2 rounded-2 {% if days < 0 %}bg-danger text-white{% elif days <= 3 %}bg-danger text-white{% elif days <= 10 %}bg-warning{% else %}bg-light{% endif %}">
+                    <i class="bi bi-clock me-1"></i>
+                    {% if days < 0 %}
+                      <strong>En retard de {{ days|cut:"-" }} jour(s)</strong>
+                    {% elif days == 0 %}
+                      <strong>Échéance aujourd'hui !</strong>
+                    {% else %}
+                      <strong>{{ days }} jour(s)</strong> restants
+                    {% endif %}
+                    <div class="small">Échéance : {{ expertise.invoice_due_date|date:"d/m/Y" }}</div>
+                  </div>
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+
+            {% if invoice.is_complete %}
+              <div class="mt-2 p-2 rounded-2 bg-success bg-opacity-10 border border-success small">
+                <i class="bi bi-check-circle-fill text-success me-1"></i>
+                Facture établie et transmise – aucune alerte active.
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="text-muted small">Aucune facture.</div>
+            <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-primary btn-sm mt-2">
+              <i class="bi bi-plus me-1"></i>Saisir la facture
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Légende statuts -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-dark text-white py-2">
+          <i class="bi bi-info-circle me-2"></i><strong>Légende</strong>
+        </div>
+        <div class="card-body py-2">
+          <div class="d-flex flex-wrap gap-1">
+            <span class="badge-status status-non_prevu">Non prévu</span>
+            <span class="badge-status status-non_recu">Dossier non reçu</span>
+            <span class="badge-status status-non_approuve">Non approuvé</span>
+            <span class="badge-status status-en_cours">En cours de vérif.</span>
+            <span class="badge-status status-approuve">Approuvé</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right col -->
+  </div>
+</div>
+{% endblock %}

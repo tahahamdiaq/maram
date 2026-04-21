@@ -111,8 +111,13 @@
 
   <!-- ── Projects Table ── -->
   <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 d-flex justify-content-end py-2">
+      <button id="exportPdfBtn" class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf me-1"></i>Exporter PDF
+      </button>
+    </div>
     <div class="card-body p-0">
-      <div class="table-responsive">
+      <div class="table-responsive projects-table-wrapper">
         <table id="projectsTable" class="table table-hover align-middle mb-0 projects-table">
           <thead class="table-dark">
             <tr>
@@ -349,9 +354,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 $(document).ready(function() {
-  // DataTable without built-in search (we use our own filter form)
   $('#projectsTable').DataTable({
     paging: true,
     pageLength: 25,
@@ -364,6 +370,56 @@ $(document).ready(function() {
       paginate: { previous: "Préc.", next: "Suiv." },
       emptyTable: "Aucun projet"
     }
+  });
+
+  $('#exportPdfBtn').on('click', function() {
+    const btn = $(this);
+    btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Génération…');
+
+    const table = document.getElementById('projectsTable');
+
+    // Temporarily remove max-height to capture full table
+    const wrapper = table.closest('.projects-table-wrapper');
+    const prevMaxHeight = wrapper.style.maxHeight;
+    const prevOverflow  = wrapper.style.overflow;
+    wrapper.style.maxHeight = 'none';
+    wrapper.style.overflow  = 'visible';
+
+    html2canvas(table, {
+      scale: 1.5,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+    }).then(function(canvas) {
+      wrapper.style.maxHeight = prevMaxHeight;
+      wrapper.style.overflow  = prevOverflow;
+
+      const { jsPDF } = window.jspdf;
+      const imgData   = canvas.toDataURL('image/png');
+      const pdf       = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const maxW   = pageW - margin * 2;
+      const maxH   = pageH - margin * 2 - 12; // room for title
+
+      const ratio  = canvas.width / canvas.height;
+      let imgW = maxW;
+      let imgH = imgW / ratio;
+      if (imgH > maxH) { imgH = maxH; imgW = imgH * ratio; }
+
+      // Title
+      pdf.setFontSize(11);
+      pdf.setTextColor(40);
+      pdf.text('Tableau de bord – Maram   ' + new Date().toLocaleDateString('fr-FR'), margin, margin + 6);
+
+      pdf.addImage(imgData, 'PNG', margin, margin + 10, imgW, imgH);
+      pdf.save('maram-projets-' + new Date().toISOString().slice(0,10) + '.pdf');
+
+      btn.prop('disabled', false).html('<i class="bi bi-file-earmark-pdf me-1"></i>Exporter PDF');
+    });
   });
 });
 </script>

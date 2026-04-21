@@ -54,6 +54,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link {% if 'expertise' in request.resolver_match.url_name %}active{% endif %}"
+             href="{% url 'expertise_list' %}">
+            <i class="bi bi-clipboard2-pulse me-2"></i>Expertises
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'engineer_list' %}active{% endif %}"
              href="{% url 'engineer_list' %}">
             <i class="bi bi-people me-2"></i>Ingénieurs
@@ -114,7 +120,7 @@
             </div>
             <div id="notifList" class="notif-scroll">
               {% for notif in notif_recent %}
-                <a href="{% url 'project_detail' notif.project_id %}"
+                <a href="{{ notif.entity_detail_url }}"
                    class="notif-item d-flex gap-2 px-3 py-2 text-decoration-none border-bottom
                           {% if notif.priority == 'critique' %}notif-critique{% elif notif.priority == 'important' %}notif-important{% else %}notif-normal{% endif %}">
                   <div class="notif-icon mt-1">
@@ -124,7 +130,7 @@
                   <div class="flex-grow-1 overflow-hidden">
                     <div class="notif-msg small text-truncate-2">{{ notif.message }}</div>
                     <div class="notif-meta d-flex justify-content-between mt-1">
-                      <span class="text-muted" style="font-size:.72rem;">{{ notif.project.name|truncatechars:25 }}</span>
+                      <span class="text-muted" style="font-size:.72rem;">{{ notif.entity_name|truncatechars:25 }}</span>
                       <span class="text-muted" style="font-size:.72rem;">{{ notif.created_at|date:"d/m H:i" }}</span>
                     </div>
                   </div>

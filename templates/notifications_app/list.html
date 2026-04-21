@@ -86,12 +86,13 @@
             </div>
             <p class="mb-1 mt-2 fw-semibold">{{ n.message }}</p>
             <div class="small text-muted">
-              <i class="bi bi-folder2 me-1"></i>
-              <a href="{% url 'project_detail' n.project_id %}" class="text-decoration-none">
-                {{ n.project.name }}
+              <i class="bi {% if n.is_expertise %}bi-clipboard2-pulse{% else %}bi-folder2{% endif %} me-1"></i>
+              <a href="{{ n.entity_detail_url }}" class="text-decoration-none">
+                {{ n.entity_name }}
               </a>
-              &nbsp;–&nbsp; {{ n.project.bon_commande_number }}
-              &nbsp;–&nbsp; {{ n.project.get_gouvernorat_display }}
+              &nbsp;–&nbsp; {{ n.entity_bc_number }}
+              &nbsp;–&nbsp; {{ n.entity_gouvernorat }}
+              {% if n.is_expertise %}<span class="badge bg-info text-dark ms-1" style="font-size:.68rem;">Expertise</span>{% endif %}
             </div>
             {% if n.email_sent %}
               <div class="small text-success mt-1">
@@ -118,7 +119,7 @@
                 </button>
               </form>
             {% endif %}
-            <a href="{% url 'project_detail' n.project_id %}" class="btn btn-sm btn-outline-primary" title="Voir le projet">
+            <a href="{{ n.entity_detail_url }}" class="btn btn-sm btn-outline-primary" title="Voir">
               <i class="bi bi-arrow-right"></i>
             </a>
           </div>

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ action }} une expertise – Maram{% endblock %}
+{% block page_title %}{{ action }} une expertise{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'expertise_list' %}">Expertises</a></li>
+        {% if expertise %}<li class="breadcrumb-item"><a href="{% url 'expertise_detail' expertise.pk %}">{{ expertise.bon_commande_number }}</a></li>{% endif %}
+        <li class="breadcrumb-item active">{{ action }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Identité -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-info-circle me-2"></i><strong>Identité de l'expertise</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">{{ form.name|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.bon_commande_number|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.bon_commande_date|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.gouvernorat|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.maitre_ouvrage_type|as_crispy_field }}</div>
+          <div class="col-md-8">{{ form.maitre_ouvrage|as_crispy_field }}</div>
+          <datalist id="maitre-ouvrage-list">
+            <option value="DRE Tunis"></option>
+            <option value="DRE Sfax"></option>
+            <option value="CRE Sousse"></option>
+          </datalist>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spécialités & Ingénieurs -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-tools me-2"></i><strong>Spécialités et ingénieurs</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Spécialités *</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                {{ form.has_structure }} <label class="form-check-label" for="{{ form.has_structure.id_for_label }}">Structure</label>
+              </div>
+              <div class="form-check">
+                {{ form.has_electricite }} <label class="form-check-label" for="{{ form.has_electricite.id_for_label }}">Électricité</label>
+              </div>
+              <div class="form-check">
+                {{ form.has_fluide }} <label class="form-check-label" for="{{ form.has_fluide.id_for_label }}">Fluide</label>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">{{ form.engineers|as_crispy_field }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dossier -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-dark text-white py-2">
+        <i class="bi bi-folder me-2"></i><strong>Statut du dossier</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">{{ form.dossier_status|as_crispy_field }}</div>
+          <div class="col-md-6">
+            {{ form.dossier_completed_date|as_crispy_field }}
+            <small class="text-muted">Renseigné automatiquement à la date d'approbation. Modifiable si nécessaire.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">
+        <i class="bi bi-save me-1"></i>{{ action }} l'expertise
+      </button>
+      <a href="{% if expertise %}{% url 'expertise_detail' expertise.pk %}{% else %}{% url 'expertise_list' %}{% endif %}"
+         class="btn btn-outline-secondary">Annuler</a>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mt-3">{{ form.non_field_errors }}</div>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

@@ -5,9 +5,9 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from .models import Project, Invoice, ProjectObservation, Engineer
-from .forms import ProjectForm, InvoiceForm, ObservationForm, EngineerForm, ProjectFilterForm
-from notifications_app.services import check_project_notifications
+from .models import Project, Invoice, ProjectObservation, Engineer, Expertise, ExpertiseInvoice, ExpertiseObservation
+from .forms import ProjectForm, InvoiceForm, ObservationForm, EngineerForm, ProjectFilterForm, ExpertiseForm, ExpertiseInvoiceForm, ExpertiseFilterForm
+from notifications_app.services import check_project_notifications, check_expertise_notifications
 
 
 # ─── Dashboard / Project List ─────────────────────────────────────────────────
@@ -245,6 +245,147 @@ def engineer_edit(request, pk):
     else:
         form = EngineerForm(instance=engineer)
     return render(request, 'projects/engineer_form.html', {'form': form, 'engineer': engineer, 'action': 'Modifier'})
+
+
+# ─── Expertises ───────────────────────────────────────────────────────────────
+
+@login_required
+def expertise_list(request):
+    form = ExpertiseFilterForm(request.GET or None)
+    expertises = Expertise.objects.prefetch_related('engineers', 'invoices', 'notifications').all()
+
+    if form.is_valid():
+        search = form.cleaned_data.get('search')
+        gouvernorat = form.cleaned_data.get('gouvernorat')
+        dossier_status = form.cleaned_data.get('dossier_status')
+        if search:
+            from django.db.models import Q
+            expertises = expertises.filter(
+                Q(name__icontains=search) |
+                Q(bon_commande_number__icontains=search) |
+                Q(maitre_ouvrage__icontains=search)
+            )
+        if gouvernorat:
+            expertises = expertises.filter(gouvernorat=gouvernorat)
+        if dossier_status:
+            expertises = expertises.filter(dossier_status=dossier_status)
+
+    from notifications_app.models import Notification
+    critical_count = Notification.objects.filter(
+        expertise__isnull=False, priority='critique', status='unread'
+    ).count()
+
+    return render(request, 'projects/expertise_list.html', {
+        'expertises': expertises,
+        'filter_form': form,
+        'total': expertises.count(),
+        'critical_count': critical_count,
+    })
+
+
+@login_required
+def expertise_detail(request, pk):
+    expertise = get_object_or_404(
+        Expertise.objects.prefetch_related('engineers', 'invoices', 'observations', 'notifications'),
+        pk=pk
+    )
+    invoice = expertise.get_invoice
+    notifications = expertise.notifications.filter(status__in=['unread', 'read']).order_by('-created_at')
+    return render(request, 'projects/expertise_detail.html', {
+        'expertise': expertise,
+        'invoice': invoice,
+        'observations': expertise.observations.all(),
+        'notifications': notifications,
+    })
+
+
+@login_required
+def expertise_create(request):
+    if request.method == 'POST':
+        form = ExpertiseForm(request.POST)
+        if form.is_valid():
+            expertise = form.save(commit=False)
+            expertise.created_by = request.user
+            expertise.save()
+            form.save_m2m()
+            ExpertiseInvoice.objects.create(expertise=expertise)
+            check_expertise_notifications(expertise)
+            messages.success(request, f'Expertise "{expertise.name}" créée avec succès.')
+            return redirect('expertise_detail', pk=expertise.pk)
+    else:
+        form = ExpertiseForm()
+    return render(request, 'projects/expertise_form.html', {'form': form, 'action': 'Créer'})
+
+
+@login_required
+def expertise_edit(request, pk):
+    expertise = get_object_or_404(Expertise, pk=pk)
+    if request.method == 'POST':
+        form = ExpertiseForm(request.POST, instance=expertise)
+        if form.is_valid():
+            form.save()
+            check_expertise_notifications(expertise)
+            messages.success(request, 'Expertise mise à jour.')
+            return redirect('expertise_detail', pk=expertise.pk)
+    else:
+        form = ExpertiseForm(instance=expertise)
+    return render(request, 'projects/expertise_form.html', {'form': form, 'expertise': expertise, 'action': 'Modifier'})
+
+
+@login_required
+def expertise_delete(request, pk):
+    expertise = get_object_or_404(Expertise, pk=pk)
+    if request.method == 'POST':
+        name = expertise.name
+        expertise.delete()
+        messages.success(request, f'Expertise "{name}" supprimée.')
+        return redirect('expertise_list')
+    return render(request, 'projects/expertise_confirm_delete.html', {'expertise': expertise})
+
+
+@login_required
+def expertise_invoice_edit(request, expertise_pk):
+    expertise = get_object_or_404(Expertise, pk=expertise_pk)
+    invoice, _ = ExpertiseInvoice.objects.get_or_create(expertise=expertise)
+    if request.method == 'POST':
+        form = ExpertiseInvoiceForm(request.POST, instance=invoice)
+        if form.is_valid():
+            form.save()
+            check_expertise_notifications(expertise)
+            messages.success(request, 'Facture mise à jour.')
+            return redirect('expertise_detail', pk=expertise_pk)
+    else:
+        form = ExpertiseInvoiceForm(instance=invoice)
+    return render(request, 'projects/expertise_invoice_form.html', {
+        'form': form,
+        'expertise': expertise,
+    })
+
+
+@login_required
+@require_POST
+def expertise_observation_add(request, expertise_pk):
+    expertise = get_object_or_404(Expertise, pk=expertise_pk)
+    text = request.POST.get('text', '').strip()
+    obs_date = request.POST.get('date', '')
+    if text and obs_date:
+        ExpertiseObservation.objects.create(
+            expertise=expertise,
+            date=obs_date,
+            text=text,
+            created_by=request.user,
+        )
+        messages.success(request, 'Observation ajoutée.')
+    return redirect('expertise_detail', pk=expertise_pk)
+
+
+@login_required
+def expertise_observation_delete(request, pk):
+    obs = get_object_or_404(ExpertiseObservation, pk=pk, is_auto=False)
+    expertise_pk = obs.expertise_id
+    obs.delete()
+    messages.success(request, 'Observation supprimée.')
+    return redirect('expertise_detail', pk=expertise_pk)
 
 
 # ─── AJAX endpoint for notification count ─────────────────────────────────────

@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Expertises – Maram{% endblock %}
+{% block page_title %}Expertises{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+
+  <!-- Stats Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-info bg-opacity-10 text-info rounded-3 p-3">
+            <i class="bi bi-clipboard2-pulse fs-4"></i>
+          </div>
+          <div>
+            <div class="h4 mb-0 fw-bold">{{ total }}</div>
+            <div class="text-muted small">Expertises</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100 {% if critical_count > 0 %}border-start border-danger border-3{% endif %}">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-danger bg-opacity-10 text-danger rounded-3 p-3">
+            <i class="bi bi-exclamation-triangle-fill fs-4 {% if critical_count > 0 %}blink{% endif %}"></i>
+          </div>
+          <div>
+            <div class="h4 mb-0 fw-bold {% if critical_count > 0 %}text-danger{% endif %}">{{ critical_count }}</div>
+            <div class="text-muted small">Alertes critiques</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-success bg-opacity-10 text-success rounded-3 p-3">
+            <i class="bi bi-plus-circle fs-4"></i>
+          </div>
+          <div>
+            <a href="{% url 'expertise_create' %}" class="btn btn-success btn-sm px-3">
+              Nouvelle expertise
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">{{ filter_form.search }}</div>
+        <div class="col-6 col-md-3">{{ filter_form.gouvernorat }}</div>
+        <div class="col-6 col-md-3">{{ filter_form.dossier_status }}</div>
+        <div class="col-12 col-md-2 d-flex gap-1">
+          <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-search"></i></button>
+          <a href="{% url 'expertise_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 d-flex justify-content-end py-2">
+      <button id="exportPdfBtn" class="btn btn-sm btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf me-1"></i>Exporter PDF
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive projects-table-wrapper">
+        <table id="expertisesTable" class="table table-hover align-middle mb-0 projects-table">
+          <thead class="table-dark">
+            <tr>
+              <th class="ps-3" style="width:40px;">#</th>
+              <th>Expertise / N°BC</th>
+              <th>Gouvernorat</th>
+              <th>M.O.</th>
+              <th class="text-center">Spéc.</th>
+              <th class="text-center">Statut dossier</th>
+              <th class="text-center">Complétion</th>
+              <th class="text-center">Échéance facture</th>
+              <th class="text-center">Facture</th>
+              <th class="text-center border-start border-secondary">Alertes</th>
+              <th class="text-end pe-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in expertises %}
+            <tr>
+              <td class="ps-3 text-muted small">{{ forloop.counter }}</td>
+              <td>
+                <a href="{% url 'expertise_detail' e.pk %}" class="fw-semibold text-dark text-decoration-none">
+                  {{ e.name|truncatechars:35 }}
+                </a>
+                <div class="text-muted" style="font-size:.75rem;">{{ e.bon_commande_number }}</div>
+                {% for eng in e.engineers.all %}
+                  <span class="badge bg-light text-dark border" style="font-size:.65rem;">{{ eng.name }}</span>
+                {% endfor %}
+              </td>
+              <td class="small">{{ e.get_gouvernorat_display }}</td>
+              <td class="small">
+                <span class="badge bg-light text-dark border">{{ e.maitre_ouvrage_type }}</span>
+                {% if e.maitre_ouvrage_type == 'autre' %}
+                  <div class="text-muted" style="font-size:.7rem;">{{ e.maitre_ouvrage|truncatechars:15 }}</div>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <div class="d-flex flex-column gap-1 align-items-center">
+                  {% if e.has_structure %}<span class="spec-badge spec-str">STR</span>{% endif %}
+                  {% if e.has_electricite %}<span class="spec-badge spec-elec">ELEC</span>{% endif %}
+                  {% if e.has_fluide %}<span class="spec-badge spec-fl">FL</span>{% endif %}
+                </div>
+              </td>
+              <td class="text-center">
+                <span class="badge-status status-{{ e.dossier_status }}">{{ e.get_dossier_status_display }}</span>
+              </td>
+              <td class="text-center small">
+                {% if e.dossier_completed_date %}
+                  <i class="bi bi-check-circle-fill text-success me-1"></i>{{ e.dossier_completed_date|date:"d/m/Y" }}
+                {% else %}
+                  <span class="text-muted">–</span>
+                {% endif %}
+              </td>
+              <td class="text-center small">
+                {% if e.invoice_due_date %}
+                  {% with days=e.invoice_days_remaining %}
+                    <div class="{% if days < 0 %}text-danger fw-bold{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
+                      {{ e.invoice_due_date|date:"d/m/Y" }}
+                    </div>
+                    {% if days is not None %}
+                      <div class="text-muted" style="font-size:.7rem;">
+                        {% if days < 0 %}Retard {{ days|cut:"-" }}j
+                        {% elif days == 0 %}Aujourd'hui
+                        {% else %}J-{{ days }}{% endif %}
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted">–</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% with inv=e.get_invoice %}
+                  {% if inv and inv.is_complete %}
+                    <span class="badge bg-success"><i class="bi bi-check2-all"></i> Transmise</span>
+                  {% elif inv and inv.is_established %}
+                    <span class="badge bg-info text-dark">Établie</span>
+                  {% elif e.dossier_complete %}
+                    {% with days=e.invoice_days_remaining %}
+                      {% if days is not None %}
+                        {% if days < 0 %}
+                          <span class="badge bg-danger blink">RETARD</span>
+                        {% elif days <= 3 %}
+                          <span class="badge bg-danger blink">J-{{ days }}</span>
+                        {% elif days <= 10 %}
+                          <span class="badge bg-warning text-dark">J-{{ days }}</span>
+                        {% else %}
+                          <span class="badge bg-info text-dark">À faire</span>
+                        {% endif %}
+                      {% endif %}
+                    {% endwith %}
+                  {% else %}
+                    <span class="text-muted small">–</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <td class="text-center border-start">
+                {% for n in e.notifications.all %}
+                  {% if n.status == 'unread' or n.status == 'read' %}
+                    <i class="bi {{ n.priority_icon }}
+                       {% if n.priority == 'critique' %}text-danger{% elif n.priority == 'important' %}text-warning{% else %}text-info{% endif %}
+                       {% if n.priority == 'critique' %}blink{% endif %}"
+                       title="{{ n.message }}"></i>
+                  {% endif %}
+                {% endfor %}
+              </td>
+              <td class="text-end pe-3">
+                <div class="btn-group btn-group-sm">
+                  <a href="{% url 'expertise_detail' e.pk %}" class="btn btn-outline-primary" title="Voir">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <a href="{% url 'expertise_edit' e.pk %}" class="btn btn-outline-secondary" title="Modifier">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="11" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                Aucune expertise trouvée.
+                <a href="{% url 'expertise_create' %}">Créer la première expertise</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('#expertisesTable').DataTable({
+    paging: true, pageLength: 25, searching: false, ordering: true, info: true,
+    language: {
+      lengthMenu: "Afficher _MENU_ expertises",
+      info: "_START_–_END_ sur _TOTAL_ expertises",
+      paginate: { previous: "Préc.", next: "Suiv." },
+      emptyTable: "Aucune expertise"
+    }
+  });
+
+  $('#exportPdfBtn').on('click', function() {
+    const btn = $(this);
+    btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Génération…');
+    const table = document.getElementById('expertisesTable');
+    const wrapper = table.closest('.projects-table-wrapper');
+    const prevMax = wrapper.style.maxHeight;
+    const prevOv  = wrapper.style.overflow;
+    wrapper.style.maxHeight = 'none';
+    wrapper.style.overflow  = 'visible';
+    html2canvas(table, { scale: 1.5, useCORS: true, backgroundColor: '#fff' }).then(function(canvas) {
+      wrapper.style.maxHeight = prevMax;
+      wrapper.style.overflow  = prevOv;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const m = 10;
+      const imgW = pageW - m * 2;
+      const imgH = imgW * canvas.height / canvas.width;
+      pdf.setFontSize(11);
+      pdf.text('Expertises – Maram   ' + new Date().toLocaleDateString('fr-FR'), m, m + 6);
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', m, m + 10, imgW, Math.min(imgH, pageH - m * 2 - 12));
+      pdf.save('maram-expertises-' + new Date().toISOString().slice(0,10) + '.pdf');
+      btn.prop('disabled', false).html('<i class="bi bi-file-earmark-pdf me-1"></i>Exporter PDF');
+    });
+  });
+});
+</script>
+{% endblock %}

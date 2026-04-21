@@ -10,6 +10,18 @@ NOTIFICATION_TYPES = [
     ('facture3_ready',    'Facture N°3 à établir'),
     ('d0_reminder',       'Rappel D0'),
     ('d6_reminder',       'Rappel D6'),
+    # Dossier status alerts (DAO / EXE × STR / ELEC / FL)
+    ('dao_str_alerte',    'DAO Structure – dossier en attente'),
+    ('dao_elec_alerte',   'DAO Électricité – dossier en attente'),
+    ('dao_fl_alerte',     'DAO Fluide – dossier en attente'),
+    ('exe_str_alerte',    'EXE Structure – dossier en attente'),
+    ('exe_elec_alerte',   'EXE Électricité – dossier en attente'),
+    ('exe_fl_alerte',     'EXE Fluide – dossier en attente'),
+    # Expertise invoice alerts
+    ('expertise_facture_ready',   'Expertise – Facture à établir'),
+    ('expertise_facture_j10',     'Expertise – Rappel Facture J-10'),
+    ('expertise_facture_j3',      'Expertise – Rappel Facture J-3'),
+    ('expertise_facture_overdue', 'Expertise – Facture en retard'),
 ]
 
 PRIORITY_CHOICES = [
@@ -32,11 +44,15 @@ CHANNEL_CHOICES = [
 
 
 class Notification(models.Model):
-    from projects.models import Project
-
     project = models.ForeignKey(
         'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True,
         related_name='notifications', verbose_name='Projet'
+    )
+    expertise = models.ForeignKey(
+        'projects.Expertise', on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='notifications', verbose_name='Expertise'
     )
     notification_type = models.CharField(
         max_length=30, choices=NOTIFICATION_TYPES,
@@ -67,6 +83,43 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"[{self.get_priority_display()}] {self.get_notification_type_display()} – {self.project.name}"
+
+    @property
+    def entity_name(self):
+        if self.project_id:
+            return self.project.name
+        if self.expertise_id:
+            return self.expertise.name
+        return ''
+
+    @property
+    def entity_bc_number(self):
+        if self.project_id:
+            return self.project.bon_commande_number
+        if self.expertise_id:
+            return self.expertise.bon_commande_number
+        return ''
+
+    @property
+    def entity_gouvernorat(self):
+        if self.project_id:
+            return self.project.get_gouvernorat_display()
+        if self.expertise_id:
+            return self.expertise.get_gouvernorat_display()
+        return ''
+
+    @property
+    def entity_detail_url(self):
+        from django.urls import reverse
+        if self.project_id:
+            return reverse('project_detail', args=[self.project_id])
+        if self.expertise_id:
+            return reverse('expertise_detail', args=[self.expertise_id])
+        return '#'
+
+    @property
+    def is_expertise(self):
+        return bool(self.expertise_id)
 
     @property
     def is_critical(self):

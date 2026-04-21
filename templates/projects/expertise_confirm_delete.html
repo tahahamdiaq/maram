@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Supprimer – {{ expertise.name }}{% endblock %}
+{% block page_title %}Supprimer une expertise{% endblock %}
+
+{% block content %}
+<div class="pt-3" style="max-width:500px;">
+  <div class="card border-0 shadow-sm border-danger border-2">
+    <div class="card-body">
+      <h5 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Confirmer la suppression</h5>
+      <p>Êtes-vous sûr de vouloir supprimer l'expertise <strong>{{ expertise.name }}</strong> ({{ expertise.bon_commande_number }}) ?<br>
+      Cette action supprimera également toutes les notifications et observations associées.</p>
+      <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Supprimer</button>
+        <a href="{% url 'expertise_detail' expertise.pk %}" class="btn btn-outline-secondary">Annuler</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -20,6 +20,16 @@ urlpatterns = [
     path('ingenieurs/nouveau/', views.engineer_create, name='engineer_create'),
     path('ingenieurs/<int:pk>/modifier/', views.engineer_edit, name='engineer_edit'),
 
+    # Expertises
+    path('expertises/', views.expertise_list, name='expertise_list'),
+    path('expertises/nouvelle/', views.expertise_create, name='expertise_create'),
+    path('expertises/<int:pk>/', views.expertise_detail, name='expertise_detail'),
+    path('expertises/<int:pk>/modifier/', views.expertise_edit, name='expertise_edit'),
+    path('expertises/<int:pk>/supprimer/', views.expertise_delete, name='expertise_delete'),
+    path('expertises/<int:expertise_pk>/facture/', views.expertise_invoice_edit, name='expertise_invoice_edit'),
+    path('expertises/<int:expertise_pk>/observations/ajouter/', views.expertise_observation_add, name='expertise_observation_add'),
+    path('expertises/observations/<int:pk>/supprimer/', views.expertise_observation_delete, name='expertise_observation_delete'),
+
     # API
     path('api/notifications/count/', views.notification_count_api, name='notification_count_api'),
 ]

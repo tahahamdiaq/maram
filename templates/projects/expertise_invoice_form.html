@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Facture – {{ expertise.name }} – Maram{% endblock %}
+{% block page_title %}Facture expertise{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{% url 'expertise_list' %}">Expertises</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'expertise_detail' expertise.pk %}">{{ expertise.bon_commande_number }}</a></li>
+      <li class="breadcrumb-item active">Facture</li>
+    </ol>
+  </nav>
+
+  {% if expertise.invoice_due_date %}
+    {% with days=expertise.invoice_days_remaining %}
+      <div class="alert alert-{% if days < 0 %}danger{% elif days <= 3 %}danger{% elif days <= 10 %}warning{% else %}info{% endif %} py-2 mb-3">
+        <i class="bi bi-clock me-1"></i>
+        Échéance : <strong>{{ expertise.invoice_due_date|date:"d/m/Y" }}</strong>
+        {% if days < 0 %} – <strong>Retard de {{ days|cut:"-" }} jour(s)</strong>
+        {% elif days == 0 %} – <strong>Aujourd'hui !</strong>
+        {% else %} – <strong>{{ days }} jour(s) restants</strong>{% endif %}
+      </div>
+    {% endwith %}
+  {% endif %}
+
+  <div class="card border-0 shadow-sm" style="max-width:600px;">
+    <div class="card-header bg-dark text-white py-2">
+      <i class="bi bi-receipt me-2"></i><strong>Facture – {{ expertise.name }}</strong>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">
+        La facture est considérée <strong>complète</strong> (notifications arrêtées) uniquement lorsque
+        les deux dates sont renseignées.
+      </p>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.establishment_date|as_crispy_field }}
+        {{ form.transmission_date|as_crispy_field }}
+        {{ form.notes|as_crispy_field }}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-save me-1"></i>Enregistrer
+          </button>
+          <a href="{% url 'expertise_detail' expertise.pk %}" class="btn btn-outline-secondary">Annuler</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

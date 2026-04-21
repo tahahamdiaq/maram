@@ -249,6 +249,124 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
 
+class Expertise(models.Model):
+    MAITRE_OUVRAGE_CHOICES = [
+        ('DRE', 'DRE'),
+        ('CRE', 'CRE'),
+        ('autre', 'Autre'),
+    ]
+
+    name = models.CharField(max_length=300, verbose_name="Intitulé de l'expertise")
+    bon_commande_number = models.CharField(max_length=100, verbose_name='N° Bon de commande')
+    bon_commande_date = models.DateField(verbose_name='Date de réception du bon de commande')
+    gouvernorat = models.CharField(max_length=50, choices=GOUVERNORAT_CHOICES, verbose_name='Gouvernorat')
+    maitre_ouvrage = models.CharField(max_length=200, verbose_name="Maître d'ouvrage")
+    maitre_ouvrage_type = models.CharField(
+        max_length=20, choices=MAITRE_OUVRAGE_CHOICES, default='autre',
+        verbose_name="Type maître d'ouvrage"
+    )
+    has_structure = models.BooleanField(default=False, verbose_name='Structure')
+    has_electricite = models.BooleanField(default=False, verbose_name='Électricité')
+    has_fluide = models.BooleanField(default=False, verbose_name='Fluide')
+    engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
+
+    dossier_status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='Statut du dossier'
+    )
+    dossier_completed_date = models.DateField(null=True, blank=True, verbose_name='Date de complétion du dossier')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='created_expertises'
+    )
+
+    class Meta:
+        verbose_name = 'Expertise'
+        verbose_name_plural = 'Expertises'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.bon_commande_number} – {self.name}"
+
+    @property
+    def dossier_complete(self):
+        return self.dossier_status == 'approuve'
+
+    @property
+    def invoice_due_date(self):
+        if self.dossier_completed_date:
+            return self.dossier_completed_date + timedelta(days=60)
+        return None
+
+    @property
+    def invoice_days_remaining(self):
+        due = self.invoice_due_date
+        if due:
+            return (due - date.today()).days
+        return None
+
+    @property
+    def get_invoice(self):
+        return self.invoices.first()
+
+    def save(self, *args, **kwargs):
+        if self.dossier_complete and not self.dossier_completed_date:
+            self.dossier_completed_date = date.today()
+        super().save(*args, **kwargs)
+
+
+class ExpertiseInvoice(models.Model):
+    expertise = models.ForeignKey(
+        Expertise, on_delete=models.CASCADE,
+        related_name='invoices', verbose_name='Expertise'
+    )
+    establishment_date = models.DateField(null=True, blank=True, verbose_name="Date d'établissement")
+    transmission_date = models.DateField(null=True, blank=True, verbose_name='Date de transmission')
+    notes = models.TextField(blank=True, verbose_name='Notes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Facture Expertise'
+        verbose_name_plural = 'Factures Expertise'
+
+    def __str__(self):
+        return f"Facture – {self.expertise.name}"
+
+    @property
+    def is_established(self):
+        return bool(self.establishment_date)
+
+    @property
+    def is_complete(self):
+        return bool(self.establishment_date and self.transmission_date)
+
+
+class ExpertiseObservation(models.Model):
+    expertise = models.ForeignKey(
+        Expertise, on_delete=models.CASCADE,
+        related_name='observations', verbose_name='Expertise'
+    )
+    date = models.DateField(default=date.today, verbose_name='Date')
+    text = models.TextField(verbose_name='Observation')
+    is_auto = models.BooleanField(default=False, verbose_name='Automatique')
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        verbose_name='Créé par'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Observation Expertise'
+        verbose_name_plural = 'Observations Expertise'
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"{self.date} – {self.expertise.name}"
+
+
 class Invoice(models.Model):
     INVOICE_CHOICES = [
         (1, 'Facture N°1'),

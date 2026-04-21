@@ -9,7 +9,7 @@ from .models import Notification, NotificationSettings
 
 @login_required
 def notification_list(request):
-    notifications = Notification.objects.select_related('project').order_by('-created_at')
+    notifications = Notification.objects.select_related('project', 'expertise').order_by('-created_at')
 
     priority = request.GET.get('priority', '')
     status = request.GET.get('status', '')
@@ -99,8 +99,8 @@ def notification_api(request):
             'priority': n.priority,
             'color': n.priority_color,
             'icon': n.priority_icon,
-            'project_id': n.project_id,
-            'project_name': n.project.name,
+            'entity_name': n.entity_name,
+            'entity_url': n.entity_detail_url,
             'type_label': n.get_notification_type_display(),
             'created_at': n.created_at.strftime('%d/%m/%Y %H:%M'),
         }

@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.safestring import mark_safe
-from .models import Project, Invoice, ProjectObservation, Engineer, STATUS_CHOICES
+from .models import Project, Invoice, ProjectObservation, Engineer, STATUS_CHOICES, Expertise, ExpertiseInvoice
 
 
 class ProjectForm(forms.ModelForm):
@@ -158,5 +158,77 @@ class ProjectFilterForm(forms.Form):
             ('d6', 'D6 en attente'),
             ('critique', 'Alertes critiques'),
         ],
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+
+class ExpertiseForm(forms.ModelForm):
+    class Meta:
+        model = Expertise
+        fields = [
+            'name', 'bon_commande_number', 'bon_commande_date',
+            'gouvernorat', 'maitre_ouvrage', 'maitre_ouvrage_type',
+            'has_structure', 'has_electricite', 'has_fluide',
+            'engineers',
+            'dossier_status', 'dossier_completed_date',
+        ]
+        widgets = {
+            'bon_commande_date':      forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'dossier_completed_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'engineers':              forms.CheckboxSelectMultiple(),
+            'maitre_ouvrage':         forms.TextInput(attrs={'list': 'maitre-ouvrage-list'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['dossier_completed_date'].required = False
+        self.fields['dossier_status'].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide')]):
+            raise forms.ValidationError("Veuillez sélectionner au moins une spécialité.")
+        return cleaned
+
+
+class ExpertiseInvoiceForm(forms.ModelForm):
+    class Meta:
+        model = ExpertiseInvoice
+        fields = ['establishment_date', 'transmission_date', 'notes']
+        widgets = {
+            'establishment_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'transmission_date':  forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'notes':              forms.Textarea(attrs={'rows': 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['establishment_date'].required = False
+        self.fields['transmission_date'].required = False
+        self.fields['notes'].required = False
+
+
+class ExpertiseFilterForm(forms.Form):
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Rechercher…', 'class': 'form-control'})
+    )
+    gouvernorat = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Tous les gouvernorats')] + [
+            ('ariana', 'Ariana'), ('beja', 'Béja'), ('ben_arous', 'Ben Arous'),
+            ('bizerte', 'Bizerte'), ('gabes', 'Gabès'), ('gafsa', 'Gafsa'),
+            ('jendouba', 'Jendouba'), ('kairouan', 'Kairouan'), ('kasserine', 'Kasserine'),
+            ('kebili', 'Kébili'), ('kef', 'Kef'), ('mahdia', 'Mahdia'),
+            ('manouba', 'Manouba'), ('medenine', 'Médenine'), ('monastir', 'Monastir'),
+            ('nabeul', 'Nabeul'), ('sfax', 'Sfax'), ('sidi_bouzid', 'Sidi Bouzid'),
+            ('siliana', 'Siliana'), ('sousse', 'Sousse'), ('tataouine', 'Tataouine'),
+            ('tozeur', 'Tozeur'), ('tunis', 'Tunis'), ('zaghouan', 'Zaghouan'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    dossier_status = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Tous les statuts')] + list(STATUS_CHOICES),
         widget=forms.Select(attrs={'class': 'form-select'})
     )

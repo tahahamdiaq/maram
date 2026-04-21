@@ -8,7 +8,7 @@ def notifications_context(request):
     recent_notifications = []
 
     try:
-        qs = Notification.objects.filter(status='unread').select_related('project').order_by('-created_at')
+        qs = Notification.objects.filter(status='unread').select_related('project', 'expertise').order_by('-created_at')
         unread_count = qs.count()
         critical_count = qs.filter(priority='critique').count()
         recent_notifications = qs[:8]
