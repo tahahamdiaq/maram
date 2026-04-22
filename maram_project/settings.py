@@ -113,6 +113,12 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@maram.tn')
 # Notification check interval (minutes)
 NOTIFICATION_CHECK_INTERVAL = 5
 
+# Watermark: name displayed on every page to identify the licensed company
+LICENSED_TO = config('LICENSED_TO', default='')
+
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# Boss email: receives a verification code on every login attempt
+BOSS_EMAIL = config('BOSS_EMAIL', default='tahahamdii04@gmail.com')

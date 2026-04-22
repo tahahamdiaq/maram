@@ -7,6 +7,7 @@ urlpatterns = [
     path('projets/<int:pk>/', views.project_detail, name='project_detail'),
     path('projets/<int:pk>/modifier/', views.project_edit, name='project_edit'),
     path('projets/<int:pk>/supprimer/', views.project_delete, name='project_delete'),
+    path('projets/<int:pk>/supprimer/verifier/', views.project_delete_verify, name='project_delete_verify'),
 
     # Factures
     path('projets/<int:project_pk>/facture/<int:invoice_number>/', views.invoice_edit, name='invoice_edit'),

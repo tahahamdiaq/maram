@@ -44,3 +44,7 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         value: noreply@maram.tn
+      - key: BOSS_EMAIL
+        value: tahahamdii04@gmail.com
+      - key: LICENSED_TO
+        value: MARAM

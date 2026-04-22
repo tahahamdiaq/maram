@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vérification – Maram</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; }
+    .verify-card { background: rgba(255,255,255,.97); border-radius: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .code-input { letter-spacing: .4rem; font-size: 1.5rem; text-align: center; font-weight: 700; }
+  </style>
+</head>
+<body class="d-flex align-items-center justify-content-center">
+  <div class="verify-card p-5" style="width:440px;">
+    <div class="text-center mb-4">
+      <i class="bi bi-shield-lock text-primary" style="font-size:2.5rem;"></i>
+      <h3 class="fw-bold mt-2 mb-0">Vérification</h3>
+      <p class="text-muted small">Un code a été envoyé au responsable</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'danger' }} py-2 small">
+          <i class="bi bi-exclamation-triangle me-1"></i>{{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="alert alert-info py-2 small mb-4">
+      <i class="bi bi-info-circle me-1"></i>
+      Connexion de <strong>{{ username }}</strong>. Le responsable a reçu un code par email.
+      Demandez-lui le code pour continuer.
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Code de vérification</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-key"></i></span>
+          <input type="text" name="code" class="form-control code-input"
+                 placeholder="000000" maxlength="6" pattern="\d{6}"
+                 inputmode="numeric" autofocus required autocomplete="off">
+        </div>
+        <div class="form-text text-muted">Code valable 10 minutes.</div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+        <i class="bi bi-check2-circle me-1"></i>Vérifier et se connecter
+      </button>
+    </form>
+
+    <div class="text-center mt-3">
+      <a href="{% url 'login' %}" class="small text-muted">
+        <i class="bi bi-arrow-left me-1"></i>Retour à la connexion
+      </a>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

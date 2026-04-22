@@ -1,10 +1,108 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+import random
+import string
+
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import Notification, NotificationSettings
+from .models import Notification, NotificationSettings, EmailLog, AccessLog, LoginVerification
+
+
+def _generate_code():
+    return ''.join(random.choices(string.digits, k=6))
+
+
+def custom_login(request):
+    if request.user.is_authenticated:
+        return redirect(settings.LOGIN_REDIRECT_URL)
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        next_url = request.POST.get('next', settings.LOGIN_REDIRECT_URL) or settings.LOGIN_REDIRECT_URL
+
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            return render(request, 'auth/login.html', {
+                'form': type('F', (), {'errors': True})(),
+                'next': next_url,
+            })
+
+        # Credentials valid – generate OTP and email the boss
+        code = _generate_code()
+        expires_at = timezone.now() + timezone.timedelta(minutes=10)
+
+        # Invalidate any previous pending verifications for this user
+        LoginVerification.objects.filter(user=user, used=False).update(used=True)
+
+        verification = LoginVerification.objects.create(
+            user=user,
+            code=code,
+            expires_at=expires_at,
+        )
+
+        boss_email = getattr(settings, 'BOSS_EMAIL', '')
+        if boss_email:
+            try:
+                send_mail(
+                    subject=f'[Maram] Code de vérification – {user.username}',
+                    message=(
+                        f"L'utilisateur « {user.username} » tente de se connecter.\n\n"
+                        f"Code de vérification : {code}\n\n"
+                        f"Ce code est valable 10 minutes.\n"
+                        f"Communiquez ce code uniquement si vous reconnaissez cet utilisateur."
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[boss_email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
+
+        request.session['pending_verification_id'] = verification.pk
+        request.session['pending_next'] = next_url
+        return redirect('login_verify')
+
+    next_url = request.GET.get('next', '')
+    return render(request, 'auth/login.html', {'next': next_url})
+
+
+def login_verify(request):
+    verification_id = request.session.get('pending_verification_id')
+    if not verification_id:
+        return redirect(settings.LOGIN_URL)
+
+    try:
+        verification = LoginVerification.objects.select_related('user').get(pk=verification_id)
+    except LoginVerification.DoesNotExist:
+        return redirect(settings.LOGIN_URL)
+
+    if not verification.is_valid():
+        messages.error(request, 'Le code a expiré ou est déjà utilisé. Veuillez vous reconnecter.')
+        return redirect(settings.LOGIN_URL)
+
+    if request.method == 'POST':
+        entered = request.POST.get('code', '').strip()
+        if entered == verification.code:
+            verification.used = True
+            verification.save(update_fields=['used'])
+            next_url = request.session.pop('pending_next', settings.LOGIN_REDIRECT_URL)
+            request.session.pop('pending_verification_id', None)
+            login(request, verification.user)
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Code incorrect. Réessayez.')
+
+    return render(request, 'auth/verify.html', {
+        'username': verification.user.username,
+        'expires_at': verification.expires_at,
+    })
 
 
 @login_required
@@ -83,6 +181,43 @@ def notification_settings(request):
 
     return render(request, 'notifications_app/settings.html', {
         'settings_list': settings_list,
+    })
+
+
+@login_required
+def email_log_list(request):
+    logs = EmailLog.objects.select_related('notification__project', 'notification__expertise')
+
+    success_filter = request.GET.get('success', '')
+    if success_filter == '1':
+        logs = logs.filter(success=True)
+    elif success_filter == '0':
+        logs = logs.filter(success=False)
+
+    total = logs.count()
+    success_count = logs.filter(success=True).count()
+    error_count = logs.filter(success=False).count()
+
+    return render(request, 'notifications_app/email_log.html', {
+        'logs': logs[:200],
+        'success_filter': success_filter,
+        'total': total,
+        'success_count': success_count,
+        'error_count': error_count,
+    })
+
+
+@login_required
+def access_log_list(request):
+    logs = AccessLog.objects.select_related('user').order_by('-timestamp')
+    event_filter = request.GET.get('event', '')
+    if event_filter:
+        logs = logs.filter(event=event_filter)
+    return render(request, 'notifications_app/access_log.html', {
+        'logs': logs[:300],
+        'event_filter': event_filter,
+        'event_choices': AccessLog.EVENT_CHOICES,
+        'forced_count': AccessLog.objects.filter(event=AccessLog.EVENT_FORCED).count(),
     })
 
 

@@ -1,8 +1,9 @@
+from django.conf import settings
 from .models import Notification
 
 
 def notifications_context(request):
-    """Inject notification counts into every template context."""
+    """Inject notification counts and app config into every template context."""
     unread_count = 0
     critical_count = 0
     recent_notifications = []
@@ -19,4 +20,5 @@ def notifications_context(request):
         'notif_unread_count': unread_count,
         'notif_critical_count': critical_count,
         'notif_recent': recent_notifications,
+        'LICENSED_TO': getattr(settings, 'LICENSED_TO', ''),
     }

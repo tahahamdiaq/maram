@@ -156,11 +156,94 @@ def project_edit(request, pk):
 def project_delete(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if request.method == 'POST':
-        name = project.name
-        project.delete()
-        messages.success(request, f'Projet "{name}" supprimé.')
-        return redirect('project_list')
+        from notifications_app.models import DeleteVerification
+        from notifications_app.views import _generate_code
+        from notifications_app.pdf_utils import build_project_pdf
+        from django.conf import settings
+        from django.core.mail import EmailMessage
+        from django.utils import timezone
+
+        code = _generate_code()
+        expires_at = timezone.now() + timezone.timedelta(minutes=15)
+
+        DeleteVerification.objects.filter(project=project, used=False).update(used=True)
+        verification = DeleteVerification.objects.create(
+            project=project,
+            code=code,
+            expires_at=expires_at,
+            requested_by=request.user,
+        )
+
+        boss_email = getattr(settings, 'BOSS_EMAIL', '')
+        if boss_email:
+            try:
+                pdf_bytes = build_project_pdf(project)
+                email = EmailMessage(
+                    subject=f'[Maram] Suppression projet – {project.bon_commande_number} {project.name}',
+                    body=(
+                        f'L\'utilisateur « {request.user.username} » demande la suppression du projet :\n\n'
+                        f'  Nom       : {project.name}\n'
+                        f'  N° BC     : {project.bon_commande_number}\n'
+                        f'  Gouvernorat: {project.get_gouvernorat_display()}\n\n'
+                        f'Code de confirmation : {code}\n\n'
+                        f'Ce code est valable 15 minutes.\n'
+                        f'Communiquez ce code uniquement si vous autorisez cette suppression.\n'
+                        f'La fiche complète du projet est jointe en PDF.'
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[boss_email],
+                )
+                email.attach(
+                    f'projet_{project.bon_commande_number}.pdf',
+                    pdf_bytes,
+                    'application/pdf',
+                )
+                email.send(fail_silently=True)
+            except Exception:
+                pass
+
+        request.session['pending_delete_id'] = verification.pk
+        return redirect('project_delete_verify', pk=pk)
+
     return render(request, 'projects/confirm_delete.html', {'project': project})
+
+
+@login_required
+def project_delete_verify(request, pk):
+    from notifications_app.models import DeleteVerification
+    project = get_object_or_404(Project, pk=pk)
+    verification_id = request.session.get('pending_delete_id')
+    if not verification_id:
+        messages.error(request, 'Session expirée. Recommencez la suppression.')
+        return redirect('project_delete', pk=pk)
+
+    try:
+        verification = DeleteVerification.objects.get(pk=verification_id, project=project)
+    except DeleteVerification.DoesNotExist:
+        messages.error(request, 'Vérification introuvable. Recommencez.')
+        return redirect('project_delete', pk=pk)
+
+    if not verification.is_valid():
+        messages.error(request, 'Le code a expiré. Recommencez la suppression.')
+        return redirect('project_delete', pk=pk)
+
+    if request.method == 'POST':
+        entered = request.POST.get('code', '').strip()
+        if entered == verification.code:
+            verification.used = True
+            verification.save(update_fields=['used'])
+            request.session.pop('pending_delete_id', None)
+            name = project.name
+            project.delete()
+            messages.success(request, f'Projet "{name}" supprimé.')
+            return redirect('project_list')
+        else:
+            messages.error(request, 'Code incorrect. Réessayez.')
+
+    return render(request, 'projects/delete_verify.html', {
+        'project': project,
+        'expires_at': verification.expires_at,
+    })
 
 
 # ─── Invoice management ───────────────────────────────────────────────────────

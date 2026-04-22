@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Confirmer la suppression – {{ project.name }}{% endblock %}
+{% block page_title %}Suppression sécurisée{% endblock %}
+{% block content %}
+<div class="pt-3" style="max-width:520px;">
+  <div class="card border-danger shadow-sm">
+    <div class="card-body py-5 px-4">
+
+      <div class="text-center mb-4">
+        <i class="bi bi-shield-exclamation text-danger" style="font-size:3rem;"></i>
+        <h5 class="mt-3 fw-bold">Autorisation requise</h5>
+        <p class="text-muted small mb-0">
+          Le responsable a reçu un email avec le code et la fiche complète du projet en PDF.
+        </p>
+      </div>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-danger py-2 small">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <div class="alert alert-warning py-2 small mb-4">
+        <i class="bi bi-trash me-1"></i>
+        Suppression de <strong>{{ project.name }}</strong>
+        ({{ project.bon_commande_number }}) – action irréversible.
+        <br>Code valable jusqu'à <strong>{{ expires_at|date:"H:i" }}</strong>.
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Code de confirmation</label>
+          <div class="input-group">
+            <span class="input-group-text bg-danger text-white border-danger">
+              <i class="bi bi-key-fill"></i>
+            </span>
+            <input type="text" name="code"
+                   class="form-control"
+                   style="letter-spacing:.4rem;font-size:1.4rem;font-weight:700;text-align:center;"
+                   placeholder="000000" maxlength="6" pattern="\d{6}"
+                   inputmode="numeric" autofocus required autocomplete="off">
+          </div>
+          <div class="form-text text-muted">Demandez le code au responsable (tahahamdii04@gmail.com).</div>
+        </div>
+        <button type="submit" class="btn btn-danger w-100 py-2 fw-semibold">
+          <i class="bi bi-trash me-1"></i>Confirmer la suppression
+        </button>
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="{% url 'project_detail' project.pk %}" class="small text-muted">
+          <i class="bi bi-arrow-left me-1"></i>Annuler et retourner au projet
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

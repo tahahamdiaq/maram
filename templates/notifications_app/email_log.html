@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Journal emails – Maram{% endblock %}
+{% block page_title %}Journal des emails envoyés{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm border-start border-primary border-3">
+        <div class="card-body py-2">
+          <div class="h5 mb-0 fw-bold">{{ total }}</div>
+          <div class="text-muted small">Total envois</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm border-start border-success border-3">
+        <div class="card-body py-2">
+          <div class="h5 mb-0 text-success fw-bold">{{ success_count }}</div>
+          <div class="text-muted small">Réussis</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm border-start border-danger border-3">
+        <div class="card-body py-2">
+          <div class="h5 mb-0 text-danger fw-bold">{{ error_count }}</div>
+          <div class="text-muted small">Erreurs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <form method="get" class="row g-2 align-items-center">
+        <div class="col-auto">
+          <select name="success" class="form-select form-select-sm">
+            <option value="">Tous les statuts</option>
+            <option value="1" {% if success_filter == '1' %}selected{% endif %}>Réussis uniquement</option>
+            <option value="0" {% if success_filter == '0' %}selected{% endif %}>Erreurs uniquement</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-search me-1"></i>Filtrer
+          </button>
+          <a href="{% url 'email_log_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0" id="emailLogTable">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:150px;">Date</th>
+            <th style="width:80px;">Statut</th>
+            <th>Objet</th>
+            <th>Destinataires</th>
+            <th>Notification liée</th>
+            <th>Erreur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td class="text-nowrap small">{{ log.sent_at|date:"d/m/Y H:i" }}</td>
+            <td>
+              {% if log.success %}
+                <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Envoyé</span>
+              {% else %}
+                <span class="badge bg-danger"><i class="bi bi-x-lg me-1"></i>Erreur</span>
+              {% endif %}
+            </td>
+            <td class="small">{{ log.subject }}</td>
+            <td class="small text-muted">
+              {% for r in log.recipient_list %}
+                <span class="badge bg-light text-dark border me-1">{{ r }}</span>
+              {% endfor %}
+            </td>
+            <td class="small">
+              {% if log.notification %}
+                <a href="{{ log.notification.entity_detail_url }}" class="text-decoration-none">
+                  <i class="bi {% if log.notification.is_expertise %}bi-clipboard2-pulse{% else %}bi-folder2{% endif %} me-1"></i>
+                  {{ log.notification.entity_name }}
+                </a>
+                <div class="text-muted" style="font-size:.72rem;">
+                  {{ log.notification.get_notification_type_display }}
+                </div>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-danger">
+              {% if log.error %}
+                <span title="{{ log.error }}">
+                  {{ log.error|truncatechars:60 }}
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="bi bi-envelope-x fs-2 d-block mb-2"></i>
+              Aucun email enregistré.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    $('#emailLogTable').DataTable({
+      order: [[0, 'desc']],
+      pageLength: 25,
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/fr-FR.json'
+      }
+    });
+  });
+</script>
+{% endblock %}

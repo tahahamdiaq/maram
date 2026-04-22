@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Journal d'accès – Maram{% endblock %}
+{% block page_title %}Journal d'accès{% endblock %}
+
+{% block content %}
+<div class="pt-3">
+
+  {% if forced_count > 0 %}
+  <div class="alert alert-danger d-flex align-items-center gap-2 py-2">
+    <i class="bi bi-shield-exclamation fs-5"></i>
+    <span>
+      <strong>{{ forced_count }}</strong> déconnexion{{ forced_count|pluralize }} forcée{{ forced_count|pluralize }} détectée{{ forced_count|pluralize }} —
+      des identifiants ont peut-être été utilisés depuis un autre appareil.
+    </span>
+  </div>
+  {% endif %}
+
+  <!-- Filter -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <form method="get" class="row g-2 align-items-center">
+        <div class="col-auto">
+          <select name="event" class="form-select form-select-sm">
+            <option value="">Tous les événements</option>
+            {% for val, label in event_choices %}
+              <option value="{{ val }}" {% if event_filter == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-search me-1"></i>Filtrer
+          </button>
+          <a href="{% url 'access_log_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0" id="accessLogTable">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:160px;">Date</th>
+            <th style="width:120px;">Utilisateur</th>
+            <th style="width:120px;">Événement</th>
+            <th style="width:140px;">Adresse IP</th>
+            <th>Navigateur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr {% if log.event == 'forced_logout' %}class="table-danger"{% endif %}>
+            <td class="text-nowrap small">{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+            <td class="small fw-semibold">{{ log.username }}</td>
+            <td>
+              <span class="badge bg-{{ log.event_color }}">
+                <i class="bi {{ log.event_icon }} me-1"></i>{{ log.get_event_display }}
+              </span>
+            </td>
+            <td class="small font-monospace">{{ log.ip_address|default:"—" }}</td>
+            <td class="small text-muted">{{ log.user_agent|truncatechars:80 }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-5">
+              <i class="bi bi-shield-check fs-2 d-block mb-2"></i>
+              Aucun accès enregistré.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    $('#accessLogTable').DataTable({
+      order: [[0, 'desc']],
+      pageLength: 25,
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/fr-FR.json'
+      }
+    });
+  });
+</script>
+{% endblock %}

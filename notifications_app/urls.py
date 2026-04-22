@@ -8,4 +8,6 @@ urlpatterns = [
     path('tout-lire/', views.mark_all_read, name='mark_all_read'),
     path('parametres/', views.notification_settings, name='notification_settings'),
     path('api/', views.notification_api, name='notification_api'),
+    path('emails/', views.email_log_list, name='email_log_list'),
+    path('acces/', views.access_log_list, name='access_log_list'),
 ]

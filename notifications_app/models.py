@@ -172,6 +172,149 @@ class NotificationRecipient(models.Model):
         verbose_name_plural = 'Destinataires'
 
 
+class EmailLog(models.Model):
+    notification = models.ForeignKey(
+        Notification, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='email_logs', verbose_name='Notification'
+    )
+    recipients = models.TextField(verbose_name='Destinataires')
+    subject = models.CharField(max_length=255, verbose_name='Objet')
+    sent_at = models.DateTimeField(auto_now_add=True, verbose_name="Heure d'envoi")
+    success = models.BooleanField(default=False, verbose_name='Succès')
+    error = models.TextField(blank=True, verbose_name='Erreur')
+
+    class Meta:
+        verbose_name = 'Journal email'
+        verbose_name_plural = 'Journal emails'
+        ordering = ['-sent_at']
+
+    def __str__(self):
+        status = 'OK' if self.success else 'ERREUR'
+        return f"[{status}] {self.subject} – {self.sent_at:%d/%m/%Y %H:%M}"
+
+    @property
+    def recipient_list(self):
+        return [r.strip() for r in self.recipients.split(',') if r.strip()]
+
+
+class UserSession(models.Model):
+    """Tracks the single valid session per user for single-session enforcement."""
+    user = models.OneToOneField(
+        'auth.User', on_delete=models.CASCADE,
+        related_name='active_session', verbose_name='Utilisateur'
+    )
+    session_key = models.CharField(max_length=40, verbose_name='Clé de session')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Session active'
+        verbose_name_plural = 'Sessions actives'
+
+    def __str__(self):
+        return f"Session de {self.user.username}"
+
+
+class AccessLog(models.Model):
+    EVENT_LOGIN = 'login'
+    EVENT_LOGOUT = 'logout'
+    EVENT_FORCED = 'forced_logout'
+    EVENT_CHOICES = [
+        (EVENT_LOGIN,  'Connexion'),
+        (EVENT_LOGOUT, 'Déconnexion'),
+        (EVENT_FORCED, 'Déconnexion forcée'),
+    ]
+
+    user = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='access_logs', verbose_name='Utilisateur'
+    )
+    username = models.CharField(max_length=150, verbose_name="Nom d'utilisateur")
+    event = models.CharField(max_length=20, choices=EVENT_CHOICES, verbose_name='Événement')
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='Adresse IP')
+    user_agent = models.TextField(blank=True, verbose_name='Navigateur')
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name='Horodatage')
+
+    class Meta:
+        verbose_name = "Journal d'accès"
+        verbose_name_plural = "Journal d'accès"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"[{self.get_event_display()}] {self.username} – {self.timestamp:%d/%m/%Y %H:%M}"
+
+    @property
+    def event_color(self):
+        return {
+            self.EVENT_LOGIN:  'success',
+            self.EVENT_LOGOUT: 'secondary',
+            self.EVENT_FORCED: 'danger',
+        }.get(self.event, 'secondary')
+
+    @property
+    def event_icon(self):
+        return {
+            self.EVENT_LOGIN:  'bi-box-arrow-in-right',
+            self.EVENT_LOGOUT: 'bi-box-arrow-right',
+            self.EVENT_FORCED: 'bi-shield-exclamation',
+        }.get(self.event, 'bi-question')
+
+
+class DeleteVerification(models.Model):
+    """One-time code required to confirm a project or expertise deletion."""
+    project = models.ForeignKey(
+        'projects.Project', on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='delete_verifications', verbose_name='Projet'
+    )
+    expertise = models.ForeignKey(
+        'projects.Expertise', on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='delete_verifications', verbose_name='Expertise'
+    )
+    code = models.CharField(max_length=6, verbose_name='Code')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(verbose_name='Expiration')
+    used = models.BooleanField(default=False)
+    requested_by = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='delete_verifications', verbose_name='Demandé par'
+    )
+
+    class Meta:
+        verbose_name = 'Vérification de suppression'
+        verbose_name_plural = 'Vérifications de suppression'
+        ordering = ['-created_at']
+
+    def is_valid(self):
+        from django.utils import timezone
+        return not self.used and timezone.now() < self.expires_at
+
+
+class LoginVerification(models.Model):
+    """Stores a one-time code sent to the boss on each login attempt."""
+    user = models.ForeignKey(
+        'auth.User', on_delete=models.CASCADE,
+        related_name='login_verifications', verbose_name='Utilisateur'
+    )
+    code = models.CharField(max_length=6, verbose_name='Code')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(verbose_name='Expiration')
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Vérification de connexion'
+        verbose_name_plural = 'Vérifications de connexion'
+        ordering = ['-created_at']
+
+    def is_valid(self):
+        from django.utils import timezone
+        return not self.used and timezone.now() < self.expires_at
+
+
 class NotificationSettings(models.Model):
     """Configuration globale des notifications."""
     notification_type = models.CharField(

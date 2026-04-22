@@ -1,0 +1,151 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{lmodern}
+
+\pagestyle{empty}
+
+\begin{document}
+\setlength{\parindent}{0pt}
+
+% ── En-tête ──────────────────────────────────────────────────────────────────
+\begin{center}
+  {\LARGE\bfseries FACTURE}\\[4pt]
+  {\large Application Maram -- Gestion de Projets}\\[2pt]
+  \rule{\linewidth}{0.6pt}\\[2pt]
+  {\small N\textsuperscript{o} MARAM-2026-001 \quad|\quad
+   \'{E}mission : 21 Avril 2026 \quad|\quad
+   \'{E}ch\'{e}ance : 21 Mai 2026}
+\end{center}
+
+\vspace{0.5cm}
+
+% ── Tableau ───────────────────────────────────────────────────────────────────
+\newcolumntype{L}{>{\raggedright\arraybackslash}p{9cm}}
+\newcolumntype{C}{>{\centering\arraybackslash}p{1.2cm}}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}p{1.8cm}}
+
+\begin{tabular}{L C R R}
+  \toprule
+  \textbf{D\'{e}signation} &
+  \textbf{Qt\'{e}} &
+  \textbf{P.U.\ (DT)} &
+  \textbf{Total (DT)} \\
+  \midrule
+
+  % --- I. DEVELOPPEMENT -------------------------------------------------------
+  \multicolumn{4}{l}{\small\bfseries
+    I. D\'{e}veloppement de l'application} \\[2pt]
+
+  {\small 1.\ Architecture \& mise en place du projet}
+  \newline{\scriptsize Stack Django/PostgreSQL, d\'{e}ploiement Render,
+    pipeline build/start.}
+  & {\small 1} & {\small 150} & {\small 150} \\[2pt]
+
+  {\small 2.\ Module Projets -- Identit\'{e} \& sp\'{e}cialit\'{e}s}
+  \newline{\scriptsize CRUD, gouvernorats, ma\^{i}tre d'ouvrage,
+    sp\'{e}cialit\'{e}s STR/ELEC/FL, ing\'{e}nieurs, N\textsuperscript{o} BC.}
+  & {\small 1} & {\small 250} & {\small 250} \\[2pt]
+
+  {\small 3.\ Phases DAO et EXE par sp\'{e}cialit\'{e}}
+  \newline{\scriptsize Statuts, dossiers D0/D6, r\'{e}ceptions RPRO/RDEF,
+    compl\'{e}tion automatique.}
+  & {\small 1} & {\small 350} & {\small 350} \\[2pt]
+
+  {\small 4.\ Module Expertises}
+  \newline{\scriptsize Phase unique, \'{e}ch\'{e}ance facturation
+    automatique \`{a} J+60.}
+  & {\small 1} & {\small 250} & {\small 250} \\[2pt]
+
+  {\small 5.\ Suivi des factures et des visites}
+  \newline{\scriptsize 3 factures/projet, alertes \'{e}ch\'{e}ances,
+    progression des visites.}
+  & {\small 1} & {\small 200} & {\small 200} \\[2pt]
+
+  {\small 6.\ Syst\`{e}me de notifications automatiques}
+  \newline{\scriptsize Alertes in-app et email, priorit\'{e}s,
+    r\'{e}solution automatique, param\'{e}trage par type.}
+  & {\small 1} & {\small 350} & {\small 350} \\[2pt]
+
+  {\small 7.\ Tableau de bord consolid\'{e}}
+  \newline{\scriptsize Filtres multi-crit\`{e}res, badges anim\'{e}s,
+    export PDF.}
+  & {\small 1} & {\small 200} & {\small 200} \\[2pt]
+
+  {\small 8.\ Historique \& observations}
+  \newline{\scriptsize Journal manuel et automatique par projet/expertise.}
+  & {\small 1} & {\small 100} & {\small 100} \\[2pt]
+
+  {\small 9.\ Interface utilisateur responsive}
+  \newline{\scriptsize Bootstrap~5, sidebar, DataTables, cloche
+    de notifications.}
+  & {\small 1} & {\small 200} & {\small 200} \\[2pt]
+
+  {\small 10.\ Int\'{e}gration email SMTP}
+  \newline{\scriptsize Gmail SMTP, corps structur\'{e},
+    tra\c{c}abilit\'{e} des envois.}
+  & {\small 1} & {\small 150} & {\small 150} \\[4pt]
+
+  \cmidrule(l){3-4}
+  \multicolumn{3}{r}{\small Sous-total D\'{e}veloppement} &
+    {\small\bfseries 2\,000} \\[4pt]
+
+  % --- II. MAINTENANCE --------------------------------------------------------
+  \multicolumn{4}{l}{\small\bfseries
+    II. Maintenance \& Monitoring (contrat 1 an)} \\[2pt]
+
+  {\small 11.\ Surveillance base de donn\'{e}es (2x/mois)}
+  \newline{\scriptsize Contr\^{o}le int\'{e}grit\'{e},
+    v\'{e}rification sauvegardes PostgreSQL. 24 interventions/an.}
+  & {\small 24} & {\small 12,5} & {\small 300} \\[2pt]
+
+  {\small 12.\ Interventions serveur \& corrections d'erreurs}
+  \newline{\scriptsize Panne, logs, correctifs urgents,
+    mises \`{a} jour de s\'{e}curit\'{e}.}
+  & {\small 1} & {\small 500} & {\small 500} \\[4pt]
+
+  \cmidrule(l){3-4}
+  \multicolumn{3}{r}{\small Sous-total Maintenance} &
+    {\small\bfseries 800} \\[4pt]
+
+  % --- III. INFRASTRUCTURE ----------------------------------------------------
+  \multicolumn{4}{l}{\small\bfseries
+    III. Infrastructure (refacturation au co\^{u}t r\'{e}el)} \\[2pt]
+
+  {\small 13.\ Render -- instances web + base de donn\'{e}es}
+  \newline{\scriptsize Web Starter (always-on) + PostgreSQL Starter,
+    sauvegardes quotidiennes. 72~DT/mois.}
+  & {\small 12} & {\small 72} & {\small 864} \\[2pt]
+
+  {\small 14.\ Nom de domaine (renouvellement annuel)}
+  & {\small 1} & {\small 72} & {\small 72} \\[4pt]
+
+  \cmidrule(l){3-4}
+  \multicolumn{3}{r}{\small Sous-total Infrastructure} &
+    {\small\bfseries 936} \\
+
+  \bottomrule
+  \multicolumn{3}{r}{\large\bfseries TOTAL HT} &
+    {\large\bfseries 3\,736 DT} \\
+  \bottomrule
+\end{tabular}
+
+\vspace{0.6cm}
+
+% ── Note ──────────────────────────────────────────────────────────────────────
+\small\textit{%
+Montant en Dinars Tunisiens (DT), hors TVA.
+R\`{e}glement \`{a} 30 jours.
+L'infrastructure est refactur\'{e}e au co\^{u}t r\'{e}el justifi\'{e}
+par facture Render.
+La maintenance couvre les interventions \`{a} distance uniquement.
+\`{A} partir de l'ann\'{e}e~2~: co\^{u}t r\'{e}current de
+\textbf{936~DT/an} (Render + domaine).
+}
+
+\end{document}
