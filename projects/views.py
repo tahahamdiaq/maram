@@ -471,6 +471,38 @@ def expertise_observation_delete(request, pk):
     return redirect('expertise_detail', pk=expertise_pk)
 
 
+# ─── PDF export ──────────────────────────────────────────────────────────────
+
+@login_required
+def project_export_pdf(request, pk):
+    from django.http import HttpResponse
+    from notifications_app.pdf_utils import build_project_pdf
+    project = get_object_or_404(
+        Project.objects.prefetch_related('engineers', 'invoices', 'observations'),
+        pk=pk,
+    )
+    pdf_bytes = build_project_pdf(project)
+    filename = f'projet_{project.bon_commande_number}.pdf'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+def expertise_export_pdf(request, pk):
+    from django.http import HttpResponse
+    from notifications_app.pdf_utils import build_expertise_pdf
+    expertise = get_object_or_404(
+        Expertise.objects.prefetch_related('engineers', 'invoices', 'observations'),
+        pk=pk,
+    )
+    pdf_bytes = build_expertise_pdf(expertise)
+    filename = f'expertise_{expertise.bon_commande_number}.pdf'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
 # ─── AJAX endpoint for notification count ─────────────────────────────────────
 
 @login_required

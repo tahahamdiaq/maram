@@ -195,3 +195,112 @@ def build_project_pdf(project):
 
     doc.build(story)
     return buf.getvalue()
+
+
+def build_expertise_pdf(expertise):
+    """Return a bytes object containing the PDF for the given Expertise."""
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm,
+        topMargin=2*cm, bottomMargin=2*cm,
+    )
+    story = []
+
+    # ── Header ────────────────────────────────────────────────────────────────
+    story.append(Paragraph('MARAM – Fiche Expertise', _TITLE))
+    story.append(Paragraph(
+        f'Généré le {date.today().strftime("%d/%m/%Y")}',
+        _SMALL,
+    ))
+    story.append(HRFlowable(width='100%', thickness=1.5, color=colors.HexColor('#0f3460'), spaceAfter=10))
+
+    # ── Identité ──────────────────────────────────────────────────────────────
+    story.append(Paragraph("Identité de l'expertise", _H2))
+    id_data = [
+        ['Champ', 'Valeur'],
+        *[_row(*r) for r in [
+            ("Intitulé",                 expertise.name),
+            ("N° Bon de commande",       expertise.bon_commande_number),
+            ("Date bon de commande",     _date(expertise.bon_commande_date)),
+            ("Gouvernorat",              expertise.get_gouvernorat_display()),
+            ("Maître d'ouvrage",         expertise.maitre_ouvrage),
+            ("Type maître d'ouvrage",    expertise.get_maitre_ouvrage_type_display()),
+            ("Spécialités",              expertise.specialties_display if hasattr(expertise, 'specialties_display') else _expertise_specialties(expertise)),
+            ("Créé par",                 expertise.created_by.get_full_name() or expertise.created_by.username if expertise.created_by else '–'),
+            ("Date de création",         _date(expertise.created_at.date()) if expertise.created_at else '–'),
+        ]]
+    ]
+    story.append(Table(id_data, colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
+
+    # ── Dossier ───────────────────────────────────────────────────────────────
+    story.append(Paragraph('Dossier', _H2))
+    story.append(Table([
+        ['Champ', 'Valeur'],
+        _row('Statut du dossier',       expertise.get_dossier_status_display()),
+        _row('Date de complétion',      _date(expertise.dossier_completed_date)),
+        _row('Échéance facture (+60j)', _date(expertise.invoice_due_date) if expertise.invoice_due_date else '–'),
+        _row('Jours restants',          f'{expertise.invoice_days_remaining} j.' if expertise.invoice_days_remaining is not None else '–'),
+    ], colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
+
+    # ── Facture ───────────────────────────────────────────────────────────────
+    story.append(Paragraph('Facture', _H2))
+    inv = expertise.get_invoice
+    if inv:
+        inv_data = [
+            ['Champ', 'Valeur'],
+            _row("Date d'établissement", _date(inv.establishment_date)),
+            _row('Date de transmission', _date(inv.transmission_date)),
+            _row('Notes',                inv.notes[:200] if inv.notes else '–'),
+        ]
+    else:
+        inv_data = [['Champ', 'Valeur'], [Paragraph('Aucune facture', _NORMAL), '']]
+    story.append(Table(inv_data, colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
+
+    # ── Ingénieurs ────────────────────────────────────────────────────────────
+    story.append(Paragraph('Ingénieurs assignés', _H2))
+    eng_data = [['Nom', 'Email', 'Téléphone', 'Spécialités']]
+    for eng in expertise.engineers.all():
+        eng_data.append([
+            Paragraph(eng.name, _NORMAL),
+            Paragraph(eng.email, _NORMAL),
+            Paragraph(eng.phone or '–', _NORMAL),
+            Paragraph(eng.specialties or '–', _NORMAL),
+        ])
+    if len(eng_data) == 1:
+        eng_data.append([Paragraph('Aucun ingénieur', _NORMAL), '', '', ''])
+    story.append(Table(eng_data, colWidths=[4*cm, 5*cm, 3*cm, 5*cm], style=_TABLE_STYLE))
+
+    # ── Observations ──────────────────────────────────────────────────────────
+    story.append(Paragraph('Observations', _H2))
+    obs_data = [['Date', 'Observation', 'Créé par']]
+    for obs in expertise.observations.all():
+        obs_data.append([
+            Paragraph(_date(obs.date), _NORMAL),
+            Paragraph(obs.text[:200], _NORMAL),
+            Paragraph(obs.created_by.username if obs.created_by else '–', _NORMAL),
+        ])
+    if len(obs_data) == 1:
+        obs_data.append([Paragraph('Aucune observation', _NORMAL), '', ''])
+    story.append(Table(obs_data, colWidths=[2.5*cm, 12*cm, 2.5*cm], style=_TABLE_STYLE))
+
+    story.append(Spacer(1, 12))
+    story.append(HRFlowable(width='100%', thickness=0.5, color=colors.grey))
+    story.append(Paragraph(
+        'Ce document a été généré automatiquement par le système Maram.',
+        _SMALL,
+    ))
+
+    doc.build(story)
+    return buf.getvalue()
+
+
+def _expertise_specialties(expertise):
+    parts = []
+    if expertise.has_structure:
+        parts.append('STR')
+    if expertise.has_electricite:
+        parts.append('ELEC')
+    if expertise.has_fluide:
+        parts.append('FL')
+    return ' / '.join(parts) if parts else '–'

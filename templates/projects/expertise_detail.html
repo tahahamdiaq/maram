@@ -14,6 +14,9 @@
       </ol>
     </nav>
     <div class="d-flex gap-2">
+      <a href="{% url 'expertise_export_pdf' expertise.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+      </a>
       <a href="{% url 'expertise_edit' expertise.pk %}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-pencil me-1"></i>Modifier
       </a>
