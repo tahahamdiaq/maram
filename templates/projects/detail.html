@@ -78,10 +78,7 @@
             </div>
             <div class="col-md-4">
               <label class="text-muted small">Maître d'ouvrage</label>
-              <div>
-                <span class="badge bg-secondary">{{ project.maitre_ouvrage_type }}</span>
-                {% if project.maitre_ouvrage_type == 'autre' %} {{ project.maitre_ouvrage }}{% endif %}
-              </div>
+              <div>{{ project.maitre_ouvrage }}</div>
             </div>
             <div class="col-md-6">
               <label class="text-muted small">Spécialités</label>
@@ -89,6 +86,7 @@
                 {% if project.has_structure %}<span class="spec-badge spec-str">Structure</span>{% endif %}
                 {% if project.has_electricite %}<span class="spec-badge spec-elec">Électricité</span>{% endif %}
                 {% if project.has_fluide %}<span class="spec-badge spec-fl">Fluide</span>{% endif %}
+                {% if project.has_securite_incendie %}<span class="spec-badge spec-si">Sécurité incendie</span>{% endif %}
               </div>
             </div>
             <div class="col-md-6">
@@ -142,6 +140,13 @@
                   <td class="text-center"><span class="badge-status status-{{ project.exe_fluide }}">{{ project.get_exe_fluide_display }}</span></td>
                 </tr>
                 {% endif %}
+                {% if project.has_securite_incendie %}
+                <tr>
+                  <td><span class="spec-badge spec-si">Sécurité incendie</span></td>
+                  <td class="text-center"><span class="badge-status status-{{ project.dao_securite_incendie }}">{{ project.get_dao_securite_incendie_display }}</span></td>
+                  <td class="text-center"><span class="badge-status status-{{ project.exe_securite_incendie }}">{{ project.get_exe_securite_incendie_display }}</span></td>
+                </tr>
+                {% endif %}
               </tbody>
             </table>
           </div>
@@ -174,12 +179,15 @@
                 <div class="d-flex justify-content-between align-items-baseline">
                   <span class="h5 mb-0 fw-bold">{{ project.completed_visits }} / {{ project.planned_visits }}</span>
                   <span class="badge {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning text-dark{% endif %}">
-                    {{ project.visit_percentage }}%
+                    {{ project.visit_percentage|floatformat:0 }}%
                   </span>
                 </div>
-                <div class="progress mt-2" style="height:8px;">
+                <div class="progress mt-2" style="height:8px; overflow:hidden;">
                   <div class="progress-bar {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning{% endif %}"
-                       style="width:{{ project.visit_percentage }}%"></div>
+                       role="progressbar"
+                       style="width:{{ project.visit_percentage|floatformat:0 }}%"
+                       aria-valuenow="{{ project.visit_percentage|floatformat:0 }}"
+                       aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
               </div>
             </div>

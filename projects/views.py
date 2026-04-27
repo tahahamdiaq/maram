@@ -1,3 +1,4 @@
+from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -38,12 +39,10 @@ def project_list(request):
             projects = projects.filter(has_electricite=True)
         elif specialty == 'fluide':
             projects = projects.filter(has_fluide=True)
-        if maitre_ouvrage == 'DRE':
-            projects = projects.filter(maitre_ouvrage_type='DRE')
-        elif maitre_ouvrage == 'CRE':
-            projects = projects.filter(maitre_ouvrage_type='CRE')
-        elif maitre_ouvrage == 'autre':
-            projects = projects.filter(maitre_ouvrage_type='autre')
+        elif specialty == 'securite_incendie':
+            projects = projects.filter(has_securite_incendie=True)
+        if maitre_ouvrage:
+            projects = projects.filter(maitre_ouvrage__icontains=maitre_ouvrage)
         if notif_filter:
             projects = _apply_notification_filter(projects, notif_filter)
 
@@ -472,6 +471,72 @@ def expertise_observation_delete(request, pk):
 
 
 # ─── PDF export ──────────────────────────────────────────────────────────────
+
+@login_required
+def expertise_list_export_pdf(request):
+    from django.http import HttpResponse
+    from notifications_app.pdf_utils import build_expertise_list_pdf
+
+    expertises = Expertise.objects.prefetch_related('engineers', 'invoices').all()
+    form = ExpertiseFilterForm(request.GET or None)
+    if form.is_valid():
+        search         = form.cleaned_data.get('search')
+        gouvernorat    = form.cleaned_data.get('gouvernorat')
+        dossier_status = form.cleaned_data.get('dossier_status')
+        if search:
+            expertises = expertises.filter(
+                Q(name__icontains=search) |
+                Q(bon_commande_number__icontains=search) |
+                Q(maitre_ouvrage__icontains=search)
+            )
+        if gouvernorat:
+            expertises = expertises.filter(gouvernorat=gouvernorat)
+        if dossier_status:
+            expertises = expertises.filter(dossier_status=dossier_status)
+
+    pdf_bytes = build_expertise_list_pdf(expertises)
+    filename = f'maram-expertises-{date.today().isoformat()}.pdf'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+@login_required
+def project_list_export_pdf(request):
+    from django.http import HttpResponse
+    from notifications_app.pdf_utils import build_project_list_pdf
+
+    projects = Project.objects.prefetch_related('engineers').all()
+    form = ProjectFilterForm(request.GET or None)
+    if form.is_valid():
+        search        = form.cleaned_data.get('search')
+        gouvernorat   = form.cleaned_data.get('gouvernorat')
+        specialty     = form.cleaned_data.get('specialty')
+        maitre_ouvrage = form.cleaned_data.get('maitre_ouvrage')
+        if search:
+            projects = projects.filter(
+                Q(name__icontains=search) |
+                Q(bon_commande_number__icontains=search) |
+                Q(maitre_ouvrage__icontains=search)
+            )
+        if gouvernorat:
+            projects = projects.filter(gouvernorat=gouvernorat)
+        if specialty == 'structure':
+            projects = projects.filter(has_structure=True)
+        elif specialty == 'electricite':
+            projects = projects.filter(has_electricite=True)
+        elif specialty == 'fluide':
+            projects = projects.filter(has_fluide=True)
+        elif specialty == 'securite_incendie':
+            projects = projects.filter(has_securite_incendie=True)
+        if maitre_ouvrage:
+            projects = projects.filter(maitre_ouvrage__icontains=maitre_ouvrage)
+
+    pdf_bytes = build_project_list_pdf(projects)
+    filename = f'maram-projets-{date.today().isoformat()}.pdf'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
 
 @login_required
 def project_export_pdf(request, pk):

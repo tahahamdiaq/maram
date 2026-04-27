@@ -37,16 +37,6 @@
                      id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
               <label class="form-check-label small" for="{{ prefix }}_engineers">Ingénieurs du projet</label>
             </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" name="{{ prefix }}_billing"
-                     id="{{ prefix }}_billing" {% if obj.send_to_billing_manager %}checked{% endif %}>
-              <label class="form-check-label small" for="{{ prefix }}_billing">Responsable facturation</label>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" name="{{ prefix }}_admin"
-                     id="{{ prefix }}_admin" {% if obj.send_to_admin %}checked{% endif %}>
-              <label class="form-check-label small" for="{{ prefix }}_admin">Administrateur</label>
-            </div>
           </div>
           <div class="col-md-6">
             <label class="form-label small fw-semibold">Emails supplémentaires</label>

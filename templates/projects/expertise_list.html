@@ -69,9 +69,10 @@
   <!-- Table -->
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white border-0 d-flex justify-content-end py-2">
-      <button id="exportPdfBtn" class="btn btn-sm btn-outline-danger">
+      <a href="{% url 'expertise_list_export_pdf' %}?{{ request.GET.urlencode }}"
+         class="btn btn-sm btn-outline-danger">
         <i class="bi bi-file-earmark-pdf me-1"></i>Exporter PDF
-      </button>
+      </a>
     </div>
     <div class="card-body p-0">
       <div class="table-responsive projects-table-wrapper">
@@ -105,17 +106,13 @@
                 {% endfor %}
               </td>
               <td class="small">{{ e.get_gouvernorat_display }}</td>
-              <td class="small">
-                <span class="badge bg-light text-dark border">{{ e.maitre_ouvrage_type }}</span>
-                {% if e.maitre_ouvrage_type == 'autre' %}
-                  <div class="text-muted" style="font-size:.7rem;">{{ e.maitre_ouvrage|truncatechars:15 }}</div>
-                {% endif %}
-              </td>
+              <td class="small">{{ e.maitre_ouvrage|truncatechars:20 }}</td>
               <td class="text-center">
                 <div class="d-flex flex-column gap-1 align-items-center">
                   {% if e.has_structure %}<span class="spec-badge spec-str">STR</span>{% endif %}
                   {% if e.has_electricite %}<span class="spec-badge spec-elec">ELEC</span>{% endif %}
                   {% if e.has_fluide %}<span class="spec-badge spec-fl">FL</span>{% endif %}
+                  {% if e.has_securite_incendie %}<span class="spec-badge spec-si">SI</span>{% endif %}
                 </div>
               </td>
               <td class="text-center">
@@ -211,8 +208,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 $(document).ready(function() {
   $('#expertisesTable').DataTable({
@@ -223,33 +218,6 @@ $(document).ready(function() {
       paginate: { previous: "Préc.", next: "Suiv." },
       emptyTable: "Aucune expertise"
     }
-  });
-
-  $('#exportPdfBtn').on('click', function() {
-    const btn = $(this);
-    btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Génération…');
-    const table = document.getElementById('expertisesTable');
-    const wrapper = table.closest('.projects-table-wrapper');
-    const prevMax = wrapper.style.maxHeight;
-    const prevOv  = wrapper.style.overflow;
-    wrapper.style.maxHeight = 'none';
-    wrapper.style.overflow  = 'visible';
-    html2canvas(table, { scale: 1.5, useCORS: true, backgroundColor: '#fff' }).then(function(canvas) {
-      wrapper.style.maxHeight = prevMax;
-      wrapper.style.overflow  = prevOv;
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const m = 10;
-      const imgW = pageW - m * 2;
-      const imgH = imgW * canvas.height / canvas.width;
-      pdf.setFontSize(11);
-      pdf.text('Expertises – Maram   ' + new Date().toLocaleDateString('fr-FR'), m, m + 6);
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', m, m + 10, imgW, Math.min(imgH, pageH - m * 2 - 12));
-      pdf.save('maram-expertises-' + new Date().toISOString().slice(0,10) + '.pdf');
-      btn.prop('disabled', false).html('<i class="bi bi-file-earmark-pdf me-1"></i>Exporter PDF');
-    });
   });
 });
 </script>

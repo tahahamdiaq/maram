@@ -74,10 +74,7 @@
             </div>
             <div class="col-md-4">
               <label class="text-muted small">Maître d'ouvrage</label>
-              <div>
-                <span class="badge bg-secondary">{{ expertise.maitre_ouvrage_type }}</span>
-                {% if expertise.maitre_ouvrage_type == 'autre' %} {{ expertise.maitre_ouvrage }}{% endif %}
-              </div>
+              <div>{{ expertise.maitre_ouvrage }}</div>
             </div>
             <div class="col-md-6">
               <label class="text-muted small">Spécialités</label>
@@ -85,6 +82,7 @@
                 {% if expertise.has_structure %}<span class="spec-badge spec-str">Structure</span>{% endif %}
                 {% if expertise.has_electricite %}<span class="spec-badge spec-elec">Électricité</span>{% endif %}
                 {% if expertise.has_fluide %}<span class="spec-badge spec-fl">Fluide</span>{% endif %}
+                {% if expertise.has_securite_incendie %}<span class="spec-badge spec-si">Sécurité incendie</span>{% endif %}
               </div>
             </div>
             <div class="col-md-6">

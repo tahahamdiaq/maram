@@ -9,25 +9,26 @@ class ProjectForm(forms.ModelForm):
         fields = [
             # Identité
             'name', 'bon_commande_number', 'bon_commande_date',
-            'gouvernorat', 'maitre_ouvrage', 'maitre_ouvrage_type',
+            'gouvernorat', 'maitre_ouvrage',
             # Spécialités
-            'has_structure', 'has_electricite', 'has_fluide',
+            'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie',
             # Ingénieurs
             'engineers',
             # Visites
             'planned_visits', 'completed_visits',
             # DAO
-            'dao_structure', 'dao_electricite', 'dao_fluide', 'dao_completed_date',
+            'dao_structure', 'dao_electricite', 'dao_fluide', 'dao_securite_incendie', 'dao_completed_date',
             # D0
             'd0_done', 'd0_date',
             # EXE
-            'exe_structure', 'exe_electricite', 'exe_fluide',
+            'exe_structure', 'exe_electricite', 'exe_fluide', 'exe_securite_incendie',
             # D6
             'd6_done', 'd6_date',
             # Réceptions
             'rpro', 'rpro_date', 'rdef', 'rdef_date',
         ]
         widgets = {
+            'bon_commande_number': forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
             'bon_commande_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dao_completed_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'd0_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
@@ -45,14 +46,20 @@ class ProjectForm(forms.ModelForm):
             self.fields[field_name].required = False
 
         # DAO fields: only required when specialty is selected (handled in JS)
-        for f in ['dao_structure', 'dao_electricite', 'dao_fluide',
-                  'exe_structure', 'exe_electricite', 'exe_fluide']:
+        for f in ['dao_structure', 'dao_electricite', 'dao_fluide', 'dao_securite_incendie',
+                  'exe_structure', 'exe_electricite', 'exe_fluide', 'exe_securite_incendie']:
             self.fields[f].required = False
+
+    def clean_bon_commande_number(self):
+        value = self.cleaned_data.get('bon_commande_number', '')
+        if not value.isdigit() or len(value) != 5:
+            raise forms.ValidationError("Le numéro de bon de commande doit contenir exactement 5 chiffres.")
+        return value
 
     def clean(self):
         cleaned = super().clean()
         # At least one specialty required
-        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide')]):
+        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide'), cleaned.get('has_securite_incendie')]):
             raise forms.ValidationError("Veuillez sélectionner au moins une spécialité.")
 
         # D0: if marked done, date is required
@@ -100,12 +107,18 @@ class ObservationForm(forms.ModelForm):
 
 
 class EngineerForm(forms.ModelForm):
+    SPECIALTY_CHOICES = [
+        ('', '– Choisir une spécialité –'),
+        ('Structure', 'Structure'),
+        ('Électricité', 'Électricité'),
+        ('Fluide', 'Fluide'),
+        ('Sécurité incendie', 'Sécurité incendie'),
+    ]
+    specialties = forms.ChoiceField(choices=SPECIALTY_CHOICES, required=False, label='Spécialités')
+
     class Meta:
         model = Engineer
         fields = ['name', 'email', 'phone', 'specialties']
-        widgets = {
-            'specialties': forms.TextInput(attrs={'placeholder': 'Ex: Structure, Électricité'}),
-        }
 
 
 class ProjectFilterForm(forms.Form):
@@ -134,18 +147,13 @@ class ProjectFilterForm(forms.Form):
             ('structure', 'Structure'),
             ('electricite', 'Électricité'),
             ('fluide', 'Fluide'),
+            ('securite_incendie', 'Sécurité incendie'),
         ],
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    maitre_ouvrage = forms.ChoiceField(
+    maitre_ouvrage = forms.CharField(
         required=False,
-        choices=[
-            ('', 'Tous les maîtres d\'ouvrage'),
-            ('DRE', 'DRE'),
-            ('CRE', 'CRE'),
-            ('autre', 'Autre'),
-        ],
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Maître d\'ouvrage…', 'id': 'id_maitre_ouvrage_filter', 'autocomplete': 'off'})
     )
     notification_filter = forms.ChoiceField(
         required=False,
@@ -167,12 +175,13 @@ class ExpertiseForm(forms.ModelForm):
         model = Expertise
         fields = [
             'name', 'bon_commande_number', 'bon_commande_date',
-            'gouvernorat', 'maitre_ouvrage', 'maitre_ouvrage_type',
-            'has_structure', 'has_electricite', 'has_fluide',
+            'gouvernorat', 'maitre_ouvrage',
+            'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie',
             'engineers',
             'dossier_status', 'dossier_completed_date',
         ]
         widgets = {
+            'bon_commande_number':    forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
             'bon_commande_date':      forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dossier_completed_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'engineers':              forms.CheckboxSelectMultiple(),
@@ -184,9 +193,15 @@ class ExpertiseForm(forms.ModelForm):
         self.fields['dossier_completed_date'].required = False
         self.fields['dossier_status'].required = False
 
+    def clean_bon_commande_number(self):
+        value = self.cleaned_data.get('bon_commande_number', '')
+        if not value.isdigit() or len(value) != 5:
+            raise forms.ValidationError("Le numéro de bon de commande doit contenir exactement 5 chiffres.")
+        return value
+
     def clean(self):
         cleaned = super().clean()
-        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide')]):
+        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide'), cleaned.get('has_securite_incendie')]):
             raise forms.ValidationError("Veuillez sélectionner au moins une spécialité.")
         return cleaned
 

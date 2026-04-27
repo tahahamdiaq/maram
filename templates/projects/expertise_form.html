@@ -30,8 +30,7 @@
           <div class="col-md-4">{{ form.bon_commande_number|as_crispy_field }}</div>
           <div class="col-md-4">{{ form.bon_commande_date|as_crispy_field }}</div>
           <div class="col-md-4">{{ form.gouvernorat|as_crispy_field }}</div>
-          <div class="col-md-4">{{ form.maitre_ouvrage_type|as_crispy_field }}</div>
-          <div class="col-md-8">{{ form.maitre_ouvrage|as_crispy_field }}</div>
+          <div class="col-md-12">{{ form.maitre_ouvrage|as_crispy_field }}</div>
           <datalist id="maitre-ouvrage-list">
             <option value="DRE Tunis"></option>
             <option value="DRE Sfax"></option>
@@ -59,6 +58,9 @@
               </div>
               <div class="form-check">
                 {{ form.has_fluide }} <label class="form-check-label" for="{{ form.has_fluide.id_for_label }}">Fluide</label>
+              </div>
+              <div class="form-check">
+                {{ form.has_securite_incendie }} <label class="form-check-label" for="{{ form.has_securite_incendie.id_for_label }}">Sécurité incendie</label>
               </div>
             </div>
           </div>

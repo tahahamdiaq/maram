@@ -30,8 +30,7 @@
           <div class="col-md-4">{{ form.bon_commande_number|as_crispy_field }}</div>
           <div class="col-md-4">{{ form.bon_commande_date|as_crispy_field }}</div>
           <div class="col-md-4">{{ form.gouvernorat|as_crispy_field }}</div>
-          <div class="col-md-4">{{ form.maitre_ouvrage_type|as_crispy_field }}</div>
-          <div class="col-md-8">{{ form.maitre_ouvrage|as_crispy_field }}</div>
+          <div class="col-md-12">{{ form.maitre_ouvrage|as_crispy_field }}</div>
           <datalist id="maitre-ouvrage-list">
             <option value="DRE Tunis"></option>
             <option value="DRE Sfax"></option>
@@ -60,6 +59,9 @@
               <div class="form-check">
                 {{ form.has_fluide }} <label class="form-check-label" for="{{ form.has_fluide.id_for_label }}">Fluide</label>
               </div>
+              <div class="form-check">
+                {{ form.has_securite_incendie }} <label class="form-check-label" for="{{ form.has_securite_incendie.id_for_label }}">Sécurité incendie</label>
+              </div>
             </div>
           </div>
           <div class="col-md-8">{{ form.engineers|as_crispy_field }}</div>
@@ -77,6 +79,7 @@
           <div class="col-md-4" id="row-dao-structure">{{ form.dao_structure|as_crispy_field }}</div>
           <div class="col-md-4" id="row-dao-electricite">{{ form.dao_electricite|as_crispy_field }}</div>
           <div class="col-md-4" id="row-dao-fluide">{{ form.dao_fluide|as_crispy_field }}</div>
+          <div class="col-md-4" id="row-dao-securite_incendie">{{ form.dao_securite_incendie|as_crispy_field }}</div>
           <div class="col-md-4">{{ form.dao_completed_date|as_crispy_field }}</div>
         </div>
       </div>
@@ -110,6 +113,7 @@
           <div class="col-md-4" id="row-exe-structure">{{ form.exe_structure|as_crispy_field }}</div>
           <div class="col-md-4" id="row-exe-electricite">{{ form.exe_electricite|as_crispy_field }}</div>
           <div class="col-md-4" id="row-exe-fluide">{{ form.exe_fluide|as_crispy_field }}</div>
+          <div class="col-md-4" id="row-exe-securite_incendie">{{ form.exe_securite_incendie|as_crispy_field }}</div>
         </div>
       </div>
     </div>
@@ -202,12 +206,14 @@ function toggleSpecialtyFields() {
   const str  = $('#id_has_structure').is(':checked');
   const elec = $('#id_has_electricite').is(':checked');
   const fl   = $('#id_has_fluide').is(':checked');
+  const si   = $('#id_has_securite_incendie').is(':checked');
 
   $('#row-dao-structure, #row-exe-structure').toggle(str);
   $('#row-dao-electricite, #row-exe-electricite').toggle(elec);
   $('#row-dao-fluide, #row-exe-fluide').toggle(fl);
+  $('#row-dao-securite_incendie, #row-exe-securite_incendie').toggle(si);
 }
-$('#id_has_structure, #id_has_electricite, #id_has_fluide').on('change', toggleSpecialtyFields);
+$('#id_has_structure, #id_has_electricite, #id_has_fluide, #id_has_securite_incendie').on('change', toggleSpecialtyFields);
 toggleSpecialtyFields();
 </script>
 {% endblock %}

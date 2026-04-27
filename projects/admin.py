@@ -22,11 +22,11 @@ class ObservationInline(admin.TabularInline):
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = [
-        'bon_commande_number', 'name', 'gouvernorat', 'maitre_ouvrage_type',
+        'bon_commande_number', 'name', 'gouvernorat', 'maitre_ouvrage',
         'has_structure', 'has_electricite', 'has_fluide',
         'dao_completed', 'visit_percentage', 'created_at'
     ]
-    list_filter = ['gouvernorat', 'maitre_ouvrage_type', 'has_structure', 'has_electricite', 'has_fluide']
+    list_filter = ['gouvernorat', 'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie']
     search_fields = ['name', 'bon_commande_number', 'maitre_ouvrage']
     filter_horizontal = ['engineers']
     inlines = [InvoiceInline, ObservationInline]
@@ -34,10 +34,10 @@ class ProjectAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('Identité', {
-            'fields': ['name', 'bon_commande_number', 'bon_commande_date', 'gouvernorat', 'maitre_ouvrage', 'maitre_ouvrage_type']
+            'fields': ['name', 'bon_commande_number', 'bon_commande_date', 'gouvernorat', 'maitre_ouvrage']
         }),
         ('Spécialités & Ingénieurs', {
-            'fields': ['has_structure', 'has_electricite', 'has_fluide', 'engineers']
+            'fields': ['has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie', 'engineers']
         }),
         ('DAO', {
             'fields': ['dao_structure', 'dao_electricite', 'dao_fluide', 'dao_completed_date']
@@ -90,8 +90,8 @@ class ExpertiseObservationInline(admin.TabularInline):
 
 @admin.register(Expertise)
 class ExpertiseAdmin(admin.ModelAdmin):
-    list_display = ['bon_commande_number', 'name', 'gouvernorat', 'maitre_ouvrage_type', 'dossier_status', 'dossier_completed_date']
-    list_filter = ['gouvernorat', 'maitre_ouvrage_type', 'dossier_status']
+    list_display = ['bon_commande_number', 'name', 'gouvernorat', 'maitre_ouvrage', 'dossier_status', 'dossier_completed_date']
+    list_filter = ['gouvernorat', 'dossier_status']
     search_fields = ['name', 'bon_commande_number', 'maitre_ouvrage']
     filter_horizontal = ['engineers']
     inlines = [ExpertiseInvoiceInline, ExpertiseObservationInline]

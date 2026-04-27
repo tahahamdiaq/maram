@@ -208,11 +208,12 @@ def _check_dossier(project, active, notif_type, status, phase_label, spec_label)
 
 def check_dossier_statuses(project, active):
     specs = [
-        ('str',  project.has_structure,   project.dao_structure,   project.exe_structure),
-        ('elec', project.has_electricite, project.dao_electricite, project.exe_electricite),
-        ('fl',   project.has_fluide,       project.dao_fluide,      project.exe_fluide),
+        ('str',  project.has_structure,          project.dao_structure,          project.exe_structure),
+        ('elec', project.has_electricite,         project.dao_electricite,        project.exe_electricite),
+        ('fl',   project.has_fluide,              project.dao_fluide,             project.exe_fluide),
+        ('si',   project.has_securite_incendie,   project.dao_securite_incendie,  project.exe_securite_incendie),
     ]
-    labels = {'str': 'STR', 'elec': 'ELEC', 'fl': 'FL'}
+    labels = {'str': 'STR', 'elec': 'ELEC', 'fl': 'FL', 'si': 'SI'}
 
     for key, enabled, dao_status, exe_status in specs:
         lbl = labels[key]

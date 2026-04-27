@@ -56,27 +56,18 @@ class Engineer(models.Model):
 
 
 class Project(models.Model):
-    MAITRE_OUVRAGE_CHOICES = [
-        ('DRE', 'DRE'),
-        ('CRE', 'CRE'),
-        ('autre', 'Autre'),
-    ]
-
     # --- Identité ---
     name = models.CharField(max_length=300, verbose_name='Nom du projet')
     bon_commande_number = models.CharField(max_length=100, verbose_name='N° Bon de commande')
     bon_commande_date = models.DateField(verbose_name='Date de réception du bon de commande')
     gouvernorat = models.CharField(max_length=50, choices=GOUVERNORAT_CHOICES, verbose_name='Gouvernorat')
     maitre_ouvrage = models.CharField(max_length=200, verbose_name="Maître d'ouvrage")
-    maitre_ouvrage_type = models.CharField(
-        max_length=20, choices=MAITRE_OUVRAGE_CHOICES, default='autre',
-        verbose_name="Type maître d'ouvrage"
-    )
 
     # --- Spécialités ---
     has_structure = models.BooleanField(default=False, verbose_name='Structure')
     has_electricite = models.BooleanField(default=False, verbose_name='Électricité')
     has_fluide = models.BooleanField(default=False, verbose_name='Fluide')
+    has_securite_incendie = models.BooleanField(default=False, verbose_name='Sécurité incendie')
 
     # --- Ingénieurs ---
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
@@ -97,6 +88,10 @@ class Project(models.Model):
     dao_fluide = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
         verbose_name='DAO Fluide'
+    )
+    dao_securite_incendie = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='DAO Sécurité incendie'
     )
     dao_completed_date = models.DateField(
         null=True, blank=True,
@@ -119,6 +114,10 @@ class Project(models.Model):
     exe_fluide = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
         verbose_name='EXE Fluide'
+    )
+    exe_securite_incendie = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='EXE Sécurité incendie'
     )
     exe_started_date = models.DateField(null=True, blank=True, verbose_name='Date début EXE')
 
@@ -156,7 +155,7 @@ class Project(models.Model):
 
     @property
     def dao_completed(self):
-        if not (self.has_structure or self.has_electricite or self.has_fluide):
+        if not (self.has_structure or self.has_electricite or self.has_fluide or self.has_securite_incendie):
             return False
         if self.has_structure and self.dao_structure != 'approuve':
             return False
@@ -164,17 +163,21 @@ class Project(models.Model):
             return False
         if self.has_fluide and self.dao_fluide != 'approuve':
             return False
+        if self.has_securite_incendie and self.dao_securite_incendie != 'approuve':
+            return False
         return True
 
     @property
     def exe_completed(self):
-        if not (self.has_structure or self.has_electricite or self.has_fluide):
+        if not (self.has_structure or self.has_electricite or self.has_fluide or self.has_securite_incendie):
             return False
         if self.has_structure and self.exe_structure != 'approuve':
             return False
         if self.has_electricite and self.exe_electricite != 'approuve':
             return False
         if self.has_fluide and self.exe_fluide != 'approuve':
+            return False
+        if self.has_securite_incendie and self.exe_securite_incendie != 'approuve':
             return False
         return True
 
@@ -240,6 +243,8 @@ class Project(models.Model):
             parts.append('ELEC')
         if self.has_fluide:
             parts.append('FL')
+        if self.has_securite_incendie:
+            parts.append('SI')
         return ' / '.join(parts) if parts else '–'
 
     def save(self, *args, **kwargs):
@@ -250,24 +255,15 @@ class Project(models.Model):
 
 
 class Expertise(models.Model):
-    MAITRE_OUVRAGE_CHOICES = [
-        ('DRE', 'DRE'),
-        ('CRE', 'CRE'),
-        ('autre', 'Autre'),
-    ]
-
     name = models.CharField(max_length=300, verbose_name="Intitulé de l'expertise")
     bon_commande_number = models.CharField(max_length=100, verbose_name='N° Bon de commande')
     bon_commande_date = models.DateField(verbose_name='Date de réception du bon de commande')
     gouvernorat = models.CharField(max_length=50, choices=GOUVERNORAT_CHOICES, verbose_name='Gouvernorat')
     maitre_ouvrage = models.CharField(max_length=200, verbose_name="Maître d'ouvrage")
-    maitre_ouvrage_type = models.CharField(
-        max_length=20, choices=MAITRE_OUVRAGE_CHOICES, default='autre',
-        verbose_name="Type maître d'ouvrage"
-    )
     has_structure = models.BooleanField(default=False, verbose_name='Structure')
     has_electricite = models.BooleanField(default=False, verbose_name='Électricité')
     has_fluide = models.BooleanField(default=False, verbose_name='Fluide')
+    has_securite_incendie = models.BooleanField(default=False, verbose_name='Sécurité incendie')
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
 
     dossier_status = models.CharField(
