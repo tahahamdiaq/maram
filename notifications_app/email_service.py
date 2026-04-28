@@ -45,7 +45,7 @@ def send_notification_email(notification):
         return False
 
     entity_label = 'Expertise' if notification.expertise_id else 'Projet'
-    subject = f"[Maram] {notification.get_notification_type_display()} – {notification.entity_name}"
+    subject = f"[WTI-GC] {notification.get_notification_type_display()} – {notification.entity_name}"
     body = (
         f"Bonjour,\n\n"
         f"{notification.message}\n\n"
@@ -53,7 +53,7 @@ def send_notification_email(notification):
         f"N° BC : {notification.entity_bc_number}\n"
         f"Gouvernorat : {notification.entity_gouvernorat}\n\n"
         f"Accédez à l'application pour gérer ce dossier.\n\n"
-        f"---\nMaram – Gestion de projets"
+        f"---\nWTI-GC – Gestion de projets"
     )
 
     try:

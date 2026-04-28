@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -178,7 +179,7 @@ def project_delete(request, pk):
             try:
                 pdf_bytes = build_project_pdf(project)
                 email = EmailMessage(
-                    subject=f'[Maram] Suppression projet – {project.bon_commande_number} {project.name}',
+                    subject=f'[WTI-GC] Suppression projet – {project.bon_commande_number} {project.name}',
                     body=(
                         f'L\'utilisateur « {request.user.username} » demande la suppression du projet :\n\n'
                         f'  Nom       : {project.name}\n'
@@ -495,7 +496,7 @@ def expertise_list_export_pdf(request):
             expertises = expertises.filter(dossier_status=dossier_status)
 
     pdf_bytes = build_expertise_list_pdf(expertises)
-    filename = f'maram-expertises-{date.today().isoformat()}.pdf'
+    filename = f'{date.today().isoformat()}-WTI-GC.pdf'
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
@@ -532,7 +533,7 @@ def project_list_export_pdf(request):
             projects = projects.filter(maitre_ouvrage__icontains=maitre_ouvrage)
 
     pdf_bytes = build_project_list_pdf(projects)
-    filename = f'maram-projets-{date.today().isoformat()}.pdf'
+    filename = f'{date.today().isoformat()}-WTI-GC.pdf'
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
@@ -547,7 +548,8 @@ def project_export_pdf(request, pk):
         pk=pk,
     )
     pdf_bytes = build_project_pdf(project)
-    filename = f'projet_{project.bon_commande_number}.pdf'
+    safe_name = re.sub(r'[^\w\-]', '_', project.name)[:80]
+    filename = f'{date.today().isoformat()}-{safe_name}.pdf'
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
@@ -562,7 +564,8 @@ def expertise_export_pdf(request, pk):
         pk=pk,
     )
     pdf_bytes = build_expertise_pdf(expertise)
-    filename = f'expertise_{expertise.bon_commande_number}.pdf'
+    safe_name = re.sub(r'[^\w\-]', '_', expertise.name)[:80]
+    filename = f'{date.today().isoformat()}-{safe_name}.pdf'
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response

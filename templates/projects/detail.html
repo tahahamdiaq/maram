@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ project.name }} – Maram{% endblock %}
+{% block title %}{{ project.name }} – WTI-GC{% endblock %}
 {% block page_title %}{{ project.name }}{% endblock %}
 
 {% block content %}
@@ -320,58 +320,14 @@
           {% endfor %}
 
           {% for invoice_num, invoice_obj in invoices.items %}
-            <div class="invoice-block p-3 border-bottom">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0 fw-semibold">
-                  <i class="bi bi-receipt me-1"></i>Facture N°{{ invoice_num }}
-                  {% if invoice_obj.is_established %}
-                    <span class="badge bg-success ms-1 small">Établie</span>
-                  {% elif invoice_num == 1 and project.dao_completed %}
-                    <span class="badge bg-warning text-dark ms-1 small">À établir</span>
-                  {% elif invoice_num == 2 and project.invoice2_condition %}
-                    <span class="badge bg-info text-dark ms-1 small">À établir</span>
-                  {% elif invoice_num == 3 and project.invoice3_condition %}
-                    <span class="badge bg-info text-dark ms-1 small">À établir</span>
-                  {% endif %}
-                </h6>
-                <a href="{% url 'invoice_edit' project.pk invoice_num %}"
-                   class="btn btn-outline-secondary btn-sm py-0">
-                  <i class="bi bi-pencil"></i>
-                </a>
-              </div>
+            <div class="p-3 border-bottom small">
+              <i class="bi bi-receipt me-1"></i>
+              <strong>Facture N°{{ invoice_num }}</strong>
               {% if invoice_obj.establishment_date %}
-                <div class="small"><span class="text-muted">Établie :</span>
-                  <strong>{{ invoice_obj.establishment_date|date:"d/m/Y" }}</strong>
-                </div>
-              {% else %}
-                <div class="small text-muted">Non établie</div>
+                – établie le <strong>{{ invoice_obj.establishment_date|date:"d/m/Y" }}</strong>
               {% endif %}
               {% if invoice_obj.transmission_date %}
-                <div class="small"><span class="text-muted">Transmise :</span>
-                  <strong>{{ invoice_obj.transmission_date|date:"d/m/Y" }}</strong>
-                </div>
-              {% endif %}
-              {% if invoice_obj.notes %}
-                <div class="small text-muted mt-1">{{ invoice_obj.notes }}</div>
-              {% endif %}
-
-              <!-- F1 deadline -->
-              {% if invoice_num == 1 and project.dao_completed and not invoice_obj.establishment_date %}
-                {% with days=project.invoice1_days_remaining %}
-                  {% if days is not None %}
-                    <div class="mt-2 p-2 rounded-2 {% if days < 0 %}bg-danger text-white{% elif days <= 2 %}bg-danger text-white{% elif days <= 7 %}bg-warning{% else %}bg-light{% endif %}">
-                      <i class="bi bi-clock me-1"></i>
-                      {% if days < 0 %}
-                        <strong>En retard de {{ days|cut:"-" }} jour(s)</strong>
-                      {% elif days == 0 %}
-                        <strong>Échéance aujourd'hui !</strong>
-                      {% else %}
-                        <strong>{{ days }} jour(s)</strong> restants
-                      {% endif %}
-                      <div class="small">Échéance : {{ project.invoice1_due_date|date:"d/m/Y" }}</div>
-                    </div>
-                  {% endif %}
-                {% endwith %}
+                et transmise le <strong>{{ invoice_obj.transmission_date|date:"d/m/Y" }}</strong>
               {% endif %}
             </div>
           {% endfor %}

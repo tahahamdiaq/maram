@@ -124,7 +124,7 @@ class EngineerForm(forms.ModelForm):
 class ProjectFilterForm(forms.Form):
     search = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Rechercher un projet…', 'class': 'form-control'})
+        widget=forms.TextInput(attrs={'placeholder': 'Nom du projet', 'class': 'form-control'})
     )
     gouvernorat = forms.ChoiceField(
         required=False,

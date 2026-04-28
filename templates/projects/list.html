@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Tableau de bord – Maram{% endblock %}
+{% block title %}Tableau de bord – WTI-GC{% endblock %}
 {% block page_title %}Tableau de bord{% endblock %}
 
 {% block content %}
@@ -156,7 +156,7 @@
                 data-project-id="{{ p.pk }}">
               <td class="ps-3 text-muted small">{{ forloop.counter }}</td>
               <td>
-                <a href="{% url 'project_detail' p.pk %}" class="fw-semibold text-dark text-decoration-none">
+                <a href="{% url 'project_detail' p.pk %}" class="fw-semibold text-dark text-decoration-none" title="{{ p.name }}">
                   {{ p.name|truncatechars:35 }}
                 </a>
                 <div class="text-muted" style="font-size:.75rem;">{{ p.bon_commande_number }}</div>
@@ -359,7 +359,7 @@ $(document).ready(function() {
     paging: true,
     pageLength: 25,
     searching: false,
-    ordering: true,
+    ordering: false,
     info: true,
     language: {
       lengthMenu: "Afficher _MENU_ projets",

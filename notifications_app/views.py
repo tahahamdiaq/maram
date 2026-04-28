@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
@@ -51,7 +52,7 @@ def custom_login(request):
         if boss_email:
             try:
                 send_mail(
-                    subject=f'[Maram] Code de vérification – {user.username}',
+                    subject=f'[WTI-GC] Code de vérification – {user.username}',
                     message=(
                         f"L'utilisateur « {user.username} » tente de se connecter.\n\n"
                         f"Code de vérification : {code}\n\n"
@@ -120,8 +121,12 @@ def notification_list(request):
     if notif_type:
         notifications = notifications.filter(notification_type=notif_type)
 
+    paginator = Paginator(notifications, 30)
+    page = paginator.get_page(request.GET.get('page'))
+
     return render(request, 'notifications_app/list.html', {
-        'notifications': notifications,
+        'notifications': page,
+        'page_obj': page,
         'priority_filter': priority,
         'status_filter': status,
         'type_filter': notif_type,
@@ -179,8 +184,13 @@ def notification_settings(request):
         messages.success(request, 'Paramètres de notifications enregistrés.')
         return redirect('notification_settings')
 
+    project_settings = [(o, l) for o, l in settings_list if not o.notification_type.startswith('expertise_')]
+    expertise_settings = [(o, l) for o, l in settings_list if o.notification_type.startswith('expertise_')]
+
     return render(request, 'notifications_app/settings.html', {
         'settings_list': settings_list,
+        'project_settings': project_settings,
+        'expertise_settings': expertise_settings,
     })
 
 

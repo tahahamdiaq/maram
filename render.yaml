@@ -39,12 +39,13 @@ services:
       - key: EMAIL_USE_TLS
         value: "True"
       - key: EMAIL_HOST_USER
-        sync: false
+        value: tahaahaamdi@gmail.com
       - key: EMAIL_HOST_PASSWORD
         sync: false
       - key: DEFAULT_FROM_EMAIL
-        value: noreply@maram.tn
+        value: tahaahaamdi@gmail.com
       - key: BOSS_EMAIL
         value: rajet.jerbi@gmail.com
       - key: LICENSED_TO
-        value: MARAM
+        value: WTI-GC
+      

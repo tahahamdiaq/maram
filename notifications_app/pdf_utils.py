@@ -62,13 +62,15 @@ def build_project_pdf(project):
         buf, pagesize=A4,
         leftMargin=2*cm, rightMargin=2*cm,
         topMargin=2*cm, bottomMargin=2*cm,
+        title=project.name,
+        author='WTI-GC',
     )
     story = []
 
     # ── Header ────────────────────────────────────────────────────────────────
-    story.append(Paragraph('MARAM – Fiche Projet (Suppression)', _TITLE))
+    story.append(Paragraph(project.name, _TITLE))
     story.append(Paragraph(
-        f'Généré le {date.today().strftime("%d/%m/%Y")} · Demande de suppression',
+        f'Généré le {date.today().strftime("%d/%m/%Y")}',
         _SMALL,
     ))
     story.append(HRFlowable(width='100%', thickness=1.5, color=colors.HexColor('#0f3460'), spaceAfter=10))
@@ -192,7 +194,7 @@ def build_project_pdf(project):
     story.append(Spacer(1, 12))
     story.append(HRFlowable(width='100%', thickness=0.5, color=colors.grey))
     story.append(Paragraph(
-        'Ce document a été généré automatiquement par le système Maram.',
+        'Ce document a été généré automatiquement par le système WTI-GC.',
         _SMALL,
     ))
 
@@ -207,11 +209,13 @@ def build_expertise_pdf(expertise):
         buf, pagesize=A4,
         leftMargin=2*cm, rightMargin=2*cm,
         topMargin=2*cm, bottomMargin=2*cm,
+        title=expertise.name,
+        author='WTI-GC',
     )
     story = []
 
     # ── Header ────────────────────────────────────────────────────────────────
-    story.append(Paragraph('MARAM – Fiche Expertise', _TITLE))
+    story.append(Paragraph(expertise.name, _TITLE))
     story.append(Paragraph(
         f'Généré le {date.today().strftime("%d/%m/%Y")}',
         _SMALL,
@@ -289,7 +293,7 @@ def build_expertise_pdf(expertise):
     story.append(Spacer(1, 12))
     story.append(HRFlowable(width='100%', thickness=0.5, color=colors.grey))
     story.append(Paragraph(
-        'Ce document a été généré automatiquement par le système Maram.',
+        'Ce document a été généré automatiquement par le système WTI-GC.',
         _SMALL,
     ))
 
@@ -318,13 +322,11 @@ def build_expertise_list_pdf(expertises):
         pagesize=_landscape(A3),
         leftMargin=1*cm, rightMargin=1*cm,
         topMargin=1*cm, bottomMargin=1*cm,
+        title='WTI-GC',
+        author='WTI-GC',
     )
 
     styles = getSampleStyleSheet()
-    TITLE_S = ParagraphStyle('ELTitle', parent=styles['Title'],
-        fontSize=13, spaceAfter=4, textColor=colors.HexColor('#0f3460'))
-    META_S  = ParagraphStyle('ELMeta', parent=styles['Normal'],
-        fontSize=8, spaceAfter=6, textColor=colors.grey)
     HDR_S   = ParagraphStyle('ELHdr', parent=styles['Normal'],
         fontSize=7, leading=9, fontName='Helvetica-Bold',
         textColor=colors.white, alignment=1)
@@ -386,7 +388,7 @@ def build_expertise_list_pdf(expertises):
         rows.append([
             Paragraph(str(i), CELL_C),
             Paragraph(e.bon_commande_number or '—', CELL_C),
-            Paragraph(e.name[:50], CELL_S),
+            Paragraph(e.name, CELL_S),
             Paragraph(e.get_gouvernorat_display()[:12], CELL_S),
             Paragraph((e.maitre_ouvrage or '—')[:22], CELL_S),
             _spec(e),
@@ -423,11 +425,7 @@ def build_expertise_list_pdf(expertises):
         ('LINEAFTER', (6, 0), (6, -1), 1.0, colors.HexColor('#0f3460')),
     ]))
 
-    story = [
-        Paragraph('Expertises – Maram', TITLE_S),
-        Paragraph(f'Exporté le {date.today().strftime("%d/%m/%Y")}  –  {len(expertises)} expertise(s)', META_S),
-        table,
-    ]
+    story = [table]
     doc.build(story)
     buf.seek(0)
     return buf.getvalue()
@@ -441,13 +439,11 @@ def build_project_list_pdf(projects):
         pagesize=_landscape(A3),
         leftMargin=1*cm, rightMargin=1*cm,
         topMargin=1*cm, bottomMargin=1*cm,
+        title='WTI-GC',
+        author='WTI-GC',
     )
 
     styles = getSampleStyleSheet()
-    TITLE_S = ParagraphStyle('LTitle', parent=styles['Title'],
-        fontSize=13, spaceAfter=4, textColor=colors.HexColor('#0f3460'))
-    META_S  = ParagraphStyle('LMeta', parent=styles['Normal'],
-        fontSize=8, spaceAfter=6, textColor=colors.grey)
     HDR_S   = ParagraphStyle('LHdr', parent=styles['Normal'],
         fontSize=7, leading=9, fontName='Helvetica-Bold',
         textColor=colors.white, alignment=1)
@@ -501,7 +497,7 @@ def build_project_list_pdf(projects):
         rows.append([
             Paragraph(str(i), CELL_C),
             Paragraph(p.bon_commande_number or '—', CELL_C),
-            Paragraph(p.name[:50], CELL_S),
+            Paragraph(p.name, CELL_S),
             Paragraph(p.get_gouvernorat_display()[:12], CELL_S),
             Paragraph((p.maitre_ouvrage or '—')[:22], CELL_S),
             _spec(p),
@@ -560,11 +556,7 @@ def build_project_list_pdf(projects):
         ('LINEAFTER', (15, 0), (15, -1), 1.0, colors.HexColor('#0f3460')),
     ]))
 
-    story = [
-        Paragraph('Tableau de bord – Maram', TITLE_S),
-        Paragraph(f'Exporté le {date.today().strftime("%d/%m/%Y")}  –  {len(projects)} projet(s)', META_S),
-        table,
-    ]
+    story = [table]
     doc.build(story)
     buf.seek(0)
     return buf.getvalue()
