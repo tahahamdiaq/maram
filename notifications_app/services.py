@@ -105,21 +105,24 @@ def check_facture1(project, today, active):
                     f'RETARD – Facture N°1 en retard de {-days} jour(s) pour le projet "{project.name}".')
 
     elif days <= 2:
-        # J-2 critical
+        # J-2 critical — resolve any stale overdue notification if date was pushed forward
+        _resolve_notifications(project, ['facture1_overdue'])
         if 'facture1_j2' not in active:
             _resolve_notifications(project, ['facture1_ready', 'facture1_j7'])
             _create(project, 'facture1_j2', 'critique',
                     f'URGENT – Il ne reste que {days} jour(s) pour établir la Facture N°1 du projet "{project.name}" (échéance : {due_date.strftime("%d/%m/%Y")}).')
 
     elif days <= 7:
-        # J-7 reminder
+        # J-7 reminder — resolve stale j2/overdue if date was pushed forward
+        _resolve_notifications(project, ['facture1_j2', 'facture1_overdue'])
         if 'facture1_j7' not in active:
             _resolve_notifications(project, ['facture1_ready'])
             _create(project, 'facture1_j7', 'important',
                     f'Rappel – Il vous reste {days} jour(s) pour établir la Facture N°1 du projet "{project.name}" (échéance : {due_date.strftime("%d/%m/%Y")}).')
 
     else:
-        # Initial notification
+        # Due date is far away — resolve any stale urgent notifications if date was pushed forward
+        _resolve_notifications(project, ['facture1_j7', 'facture1_j2', 'facture1_overdue'])
         if 'facture1_ready' not in active:
             _create(project, 'facture1_ready', 'important',
                     f'Facture N°1 à établir pour le projet "{project.name}" (avant le {due_date.strftime("%d/%m/%Y")}).')
@@ -268,6 +271,8 @@ def check_expertise_notifications(expertise):
             _create_expertise(expertise, 'expertise_facture_overdue', 'critique',
                 f'RETARD – Facture expertise en retard de {-days} jour(s) pour "{expertise.name}".')
     elif days <= 3:
+        # Resolve stale overdue if date was pushed forward
+        _resolve_expertise_notifications(expertise, ['expertise_facture_overdue'])
         if 'expertise_facture_j3' not in active:
             _resolve_expertise_notifications(expertise, [
                 'expertise_facture_ready', 'expertise_facture_j10'
@@ -276,12 +281,18 @@ def check_expertise_notifications(expertise):
                 f'URGENT – Il reste {days} jour(s) pour établir la facture de l\'expertise '
                 f'"{expertise.name}" (échéance : {due_date.strftime("%d/%m/%Y")}).')
     elif days <= 10:
+        # Resolve stale j3/overdue if date was pushed forward
+        _resolve_expertise_notifications(expertise, ['expertise_facture_j3', 'expertise_facture_overdue'])
         if 'expertise_facture_j10' not in active:
             _resolve_expertise_notifications(expertise, ['expertise_facture_ready'])
             _create_expertise(expertise, 'expertise_facture_j10', 'important',
                 f'Rappel – {days} jour(s) restants pour la facture de l\'expertise '
                 f'"{expertise.name}" (échéance : {due_date.strftime("%d/%m/%Y")}).')
     else:
+        # Due date far away — resolve any stale urgent notifications if date was pushed forward
+        _resolve_expertise_notifications(expertise, [
+            'expertise_facture_j10', 'expertise_facture_j3', 'expertise_facture_overdue'
+        ])
         if 'expertise_facture_ready' not in active:
             _create_expertise(expertise, 'expertise_facture_ready', 'important',
                 f'Facture expertise à établir pour "{expertise.name}" '

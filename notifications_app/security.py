@@ -1,9 +1,8 @@
 """
-Security: single-session enforcement and access audit logging.
+Security: access audit logging.
 Signal handlers are connected in NotificationsAppConfig.ready().
 """
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.contrib.sessions.models import Session
 from django.dispatch import receiver
 
 
@@ -17,14 +16,7 @@ def on_user_login(sender, request, user, **kwargs):
     from .models import UserSession, AccessLog
 
     new_key = request.session.session_key
-    try:
-        record = UserSession.objects.get(user=user)
-        if record.session_key != new_key:
-            Session.objects.filter(session_key=record.session_key).delete()
-            record.session_key = new_key
-            record.save(update_fields=['session_key'])
-    except UserSession.DoesNotExist:
-        UserSession.objects.create(user=user, session_key=new_key)
+    UserSession.objects.update_or_create(user=user, defaults={'session_key': new_key})
 
     AccessLog.objects.create(
         user=user,

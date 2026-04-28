@@ -141,9 +141,15 @@ def project_create(request):
 def project_edit(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if request.method == 'POST':
+        old_engineers = set(project.engineers.values_list('pk', flat=True))
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
+            new_engineers = set(project.engineers.values_list('pk', flat=True))
+            if new_engineers - old_engineers:
+                project.notifications.filter(
+                    status__in=['unread', 'read'], email_sent=True
+                ).update(email_sent=False)
             check_project_notifications(project)
             messages.success(request, 'Projet mis à jour avec succès.')
             return redirect('project_detail', pk=project.pk)
@@ -330,6 +336,16 @@ def engineer_edit(request, pk):
     return render(request, 'projects/engineer_form.html', {'form': form, 'engineer': engineer, 'action': 'Modifier'})
 
 
+@login_required
+@require_POST
+def engineer_delete(request, pk):
+    engineer = get_object_or_404(Engineer, pk=pk)
+    name = engineer.name
+    engineer.delete()
+    messages.success(request, f'Ingénieur "{name}" supprimé.')
+    return redirect('engineer_list')
+
+
 # ─── Expertises ───────────────────────────────────────────────────────────────
 
 @login_required
@@ -404,9 +420,15 @@ def expertise_create(request):
 def expertise_edit(request, pk):
     expertise = get_object_or_404(Expertise, pk=pk)
     if request.method == 'POST':
+        old_engineers = set(expertise.engineers.values_list('pk', flat=True))
         form = ExpertiseForm(request.POST, instance=expertise)
         if form.is_valid():
             form.save()
+            new_engineers = set(expertise.engineers.values_list('pk', flat=True))
+            if new_engineers - old_engineers:
+                expertise.notifications.filter(
+                    status__in=['unread', 'read'], email_sent=True
+                ).update(email_sent=False)
             check_expertise_notifications(expertise)
             messages.success(request, 'Expertise mise à jour.')
             return redirect('expertise_detail', pk=expertise.pk)

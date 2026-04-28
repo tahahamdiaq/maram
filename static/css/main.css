@@ -175,10 +175,15 @@
   white-space: nowrap;
 }
 
-.projects-table thead tr {
+.projects-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
+}
+
+/* Project table has two header rows — second row sits below the first */
+#projectsTable thead tr:nth-child(2) th {
+  top: 37px;
 }
 
 .projects-table td {

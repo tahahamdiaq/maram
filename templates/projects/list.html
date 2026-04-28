@@ -23,7 +23,7 @@
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <a href="{% url 'notification_list' %}?priority=critique&status=" class="text-decoration-none">
+      <a href="{% url 'notification_list' %}?entity=project&priority=critique&status=" class="text-decoration-none">
         <div class="card border-0 shadow-sm h-100 {% if critical_count > 0 %}border-start border-danger border-3{% endif %}">
           <div class="card-body d-flex align-items-center gap-3">
             <div class="stat-icon bg-danger bg-opacity-10 text-danger rounded-3 p-3">

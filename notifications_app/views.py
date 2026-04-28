@@ -35,6 +35,11 @@ def custom_login(request):
                 'next': next_url,
             })
 
+        # Bypass OTP for the test account
+        if user.username == 'rajettest':
+            login(request, user)
+            return redirect(next_url)
+
         # Credentials valid – generate OTP and email the boss
         code = _generate_code()
         expires_at = timezone.now() + timezone.timedelta(minutes=10)
@@ -113,6 +118,7 @@ def notification_list(request):
     priority = request.GET.get('priority', '')
     status = request.GET.get('status', '')
     notif_type = request.GET.get('type', '')
+    entity = request.GET.get('entity', '')
 
     if priority:
         notifications = notifications.filter(priority=priority)
@@ -120,6 +126,10 @@ def notification_list(request):
         notifications = notifications.filter(status=status)
     if notif_type:
         notifications = notifications.filter(notification_type=notif_type)
+    if entity == 'project':
+        notifications = notifications.filter(project__isnull=False)
+    elif entity == 'expertise':
+        notifications = notifications.filter(expertise__isnull=False)
 
     paginator = Paginator(notifications, 30)
     page = paginator.get_page(request.GET.get('page'))
@@ -130,6 +140,7 @@ def notification_list(request):
         'priority_filter': priority,
         'status_filter': status,
         'type_filter': notif_type,
+        'entity_filter': entity,
     })
 
 

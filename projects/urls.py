@@ -22,6 +22,7 @@ urlpatterns = [
     path('ingenieurs/', views.engineer_list, name='engineer_list'),
     path('ingenieurs/nouveau/', views.engineer_create, name='engineer_create'),
     path('ingenieurs/<int:pk>/modifier/', views.engineer_edit, name='engineer_edit'),
+    path('ingenieurs/<int:pk>/supprimer/', views.engineer_delete, name='engineer_delete'),
 
     # Expertises
     path('expertises/', views.expertise_list, name='expertise_list'),
