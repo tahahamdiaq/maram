@@ -21,7 +21,6 @@ class ProjectForm(forms.ModelForm):
             'dao_electricite', 'dao_electricite_received_date', 'dao_electricite_decision_date',
             'dao_fluide', 'dao_fluide_received_date', 'dao_fluide_decision_date',
             'dao_securite_incendie', 'dao_securite_incendie_received_date', 'dao_securite_incendie_decision_date',
-            'dao_completed_date',
             # D0
             'd0_done', 'd0_date',
             # EXE
@@ -37,7 +36,6 @@ class ProjectForm(forms.ModelForm):
         widgets = {
             'bon_commande_number': forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
             'bon_commande_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dao_completed_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dao_structure_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dao_structure_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dao_electricite_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
@@ -65,7 +63,7 @@ class ProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         optional_dates = [
-            'dao_completed_date', 'd0_date', 'd6_date', 'rpro_date', 'rdef_date',
+            'd0_date', 'd6_date', 'rpro_date', 'rdef_date',
             'dao_structure_received_date', 'dao_structure_decision_date',
             'dao_electricite_received_date', 'dao_electricite_decision_date',
             'dao_fluide_received_date', 'dao_fluide_decision_date',

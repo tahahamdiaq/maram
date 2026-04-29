@@ -277,9 +277,16 @@ class Project(models.Model):
         return ' / '.join(parts) if parts else '–'
 
     def save(self, *args, **kwargs):
-        # Auto-set dao_completed_date when DAO is first completed
         if self.dao_completed and not self.dao_completed_date:
-            self.dao_completed_date = date.today()
+            decision_dates = [
+                d for d in [
+                    self.dao_structure_decision_date if self.has_structure else None,
+                    self.dao_electricite_decision_date if self.has_electricite else None,
+                    self.dao_fluide_decision_date if self.has_fluide else None,
+                    self.dao_securite_incendie_decision_date if self.has_securite_incendie else None,
+                ] if d is not None
+            ]
+            self.dao_completed_date = max(decision_dates) if decision_dates else date.today()
         super().save(*args, **kwargs)
 
     def _days_remaining(self, status_field):
