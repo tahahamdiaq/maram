@@ -62,7 +62,7 @@ def send_notification_email(notification):
             message=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=recipients,
-            fail_silently=False,
+            fail_silently=True,
         )
         notification.email_sent = True
         notification.email_sent_at = timezone.now()
