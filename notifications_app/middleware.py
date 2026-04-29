@@ -1,8 +1,18 @@
+import threading
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.utils import timezone
+
+
+def _send_emails_background():
+    try:
+        from .email_service import send_pending_emails
+        send_pending_emails()
+    except Exception:
+        pass
 
 
 def _get_ip(request):
@@ -69,8 +79,7 @@ class NotificationCheckMiddleware:
             cls._last_check = now
             try:
                 from .services import check_all_notifications
-                from .email_service import send_pending_emails
                 check_all_notifications()
-                send_pending_emails()
             except Exception:
-                pass  # Never crash a request due to notification check failure
+                pass
+            threading.Thread(target=_send_emails_background, daemon=True).start()
