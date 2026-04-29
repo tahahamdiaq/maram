@@ -74,13 +74,36 @@
       <div class="card-header bg-dark text-white py-2">
         <i class="bi bi-folder me-2"></i><strong>Phase 1 – DAO</strong>
       </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-4" id="row-dao-structure">{{ form.dao_structure|as_crispy_field }}</div>
-          <div class="col-md-4" id="row-dao-electricite">{{ form.dao_electricite|as_crispy_field }}</div>
-          <div class="col-md-4" id="row-dao-fluide">{{ form.dao_fluide|as_crispy_field }}</div>
-          <div class="col-md-4" id="row-dao-securite_incendie">{{ form.dao_securite_incendie|as_crispy_field }}</div>
-        </div>
+      <div class="card-body p-0">
+        <table class="table table-bordered align-middle small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:140px;">Spécialité</th>
+              <th>Statut</th>
+              <th>Date réception</th>
+              <th>Date décision</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for spec_key, spec_label, spec_class, status_field, recv_field, dec_field in dao_specs %}
+            <tr class="spec-row" data-spec="{{ spec_key }}">
+              <td><span class="spec-badge {{ spec_class }}">{{ spec_label }}</span></td>
+              <td>
+                <div class="field-active">{{ status_field }}</div>
+                <div class="field-inactive"><span class="badge-status status-non_prevu">Non prévu</span></div>
+              </td>
+              <td>
+                <div class="field-active">{{ recv_field }}</div>
+                <div class="field-inactive text-muted">–</div>
+              </td>
+              <td>
+                <div class="field-active">{{ dec_field }}</div>
+                <div class="field-inactive text-muted">–</div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -107,13 +130,36 @@
       <div class="card-header bg-dark text-white py-2">
         <i class="bi bi-gear me-2"></i><strong>Phase 2 – EXE</strong>
       </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-4" id="row-exe-structure">{{ form.exe_structure|as_crispy_field }}</div>
-          <div class="col-md-4" id="row-exe-electricite">{{ form.exe_electricite|as_crispy_field }}</div>
-          <div class="col-md-4" id="row-exe-fluide">{{ form.exe_fluide|as_crispy_field }}</div>
-          <div class="col-md-4" id="row-exe-securite_incendie">{{ form.exe_securite_incendie|as_crispy_field }}</div>
-        </div>
+      <div class="card-body p-0">
+        <table class="table table-bordered align-middle small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:140px;">Spécialité</th>
+              <th>Statut</th>
+              <th>Date réception</th>
+              <th>Date décision</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for spec_key, spec_label, spec_class, status_field, recv_field, dec_field in exe_specs %}
+            <tr class="spec-row" data-spec="{{ spec_key }}">
+              <td><span class="spec-badge {{ spec_class }}">{{ spec_label }}</span></td>
+              <td>
+                <div class="field-active">{{ status_field }}</div>
+                <div class="field-inactive"><span class="badge-status status-non_prevu">Non prévu</span></div>
+              </td>
+              <td>
+                <div class="field-active">{{ recv_field }}</div>
+                <div class="field-inactive text-muted">–</div>
+              </td>
+              <td>
+                <div class="field-active">{{ dec_field }}</div>
+                <div class="field-inactive text-muted">–</div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -200,17 +246,19 @@ function updateVisitPct() {
 $('#id_planned_visits, #id_completed_visits').on('input', updateVisitPct);
 updateVisitPct();
 
-// Show/hide DAO/EXE fields based on selected specialties
+// Show active fields or "Non prévu" based on selected specialties
+const specMap = {
+  structure:         '#id_has_structure',
+  electricite:       '#id_has_electricite',
+  fluide:            '#id_has_fluide',
+  securite_incendie: '#id_has_securite_incendie',
+};
 function toggleSpecialtyFields() {
-  const str  = $('#id_has_structure').is(':checked');
-  const elec = $('#id_has_electricite').is(':checked');
-  const fl   = $('#id_has_fluide').is(':checked');
-  const si   = $('#id_has_securite_incendie').is(':checked');
-
-  $('#row-dao-structure, #row-exe-structure').toggle(str);
-  $('#row-dao-electricite, #row-exe-electricite').toggle(elec);
-  $('#row-dao-fluide, #row-exe-fluide').toggle(fl);
-  $('#row-dao-securite_incendie, #row-exe-securite_incendie').toggle(si);
+  for (const [spec, checkboxId] of Object.entries(specMap)) {
+    const active = $(checkboxId).is(':checked');
+    $(`tr.spec-row[data-spec="${spec}"] .field-active`).toggle(active);
+    $(`tr.spec-row[data-spec="${spec}"] .field-inactive`).toggle(!active);
+  }
 }
 $('#id_has_structure, #id_has_electricite, #id_has_fluide, #id_has_securite_incendie').on('change', toggleSpecialtyFields);
 toggleSpecialtyFields();

@@ -116,6 +116,31 @@ def project_detail(request, pk):
 
 # ─── Create / Edit Project ────────────────────────────────────────────────────
 
+_SPEC_META = [
+    ('structure',         'STR',  'spec-str'),
+    ('electricite',       'ELEC', 'spec-elec'),
+    ('fluide',            'FL',   'spec-fl'),
+    ('securite_incendie', 'SI',   'spec-si'),
+]
+
+def _project_form_context(form):
+    dao_specs, exe_specs = [], []
+    for key, label, css in _SPEC_META:
+        dao_specs.append((
+            key, label, css,
+            form[f'dao_{key}'],
+            form[f'dao_{key}_received_date'],
+            form[f'dao_{key}_decision_date'],
+        ))
+        exe_specs.append((
+            key, label, css,
+            form[f'exe_{key}'],
+            form[f'exe_{key}_received_date'],
+            form[f'exe_{key}_decision_date'],
+        ))
+    return {'dao_specs': dao_specs, 'exe_specs': exe_specs}
+
+
 @login_required
 def project_create(request):
     if request.method == 'POST':
@@ -125,16 +150,14 @@ def project_create(request):
             project.created_by = request.user
             project.save()
             form.save_m2m()
-            # Create placeholder invoices
             for n in [1, 2, 3]:
                 Invoice.objects.get_or_create(project=project, invoice_number=n)
-            # Run notification check immediately
             check_project_notifications(project)
             messages.success(request, f'Projet "{project.name}" créé avec succès.')
             return redirect('project_detail', pk=project.pk)
     else:
         form = ProjectForm()
-    return render(request, 'projects/form.html', {'form': form, 'action': 'Créer'})
+    return render(request, 'projects/form.html', {'form': form, 'action': 'Créer', **_project_form_context(form)})
 
 
 _DOSSIER_FIELDS = [
@@ -210,7 +233,7 @@ def project_edit(request, pk):
             return redirect('project_detail', pk=project.pk)
     else:
         form = ProjectForm(instance=project)
-    return render(request, 'projects/form.html', {'form': form, 'project': project, 'action': 'Modifier'})
+    return render(request, 'projects/form.html', {'form': form, 'project': project, 'action': 'Modifier', **_project_form_context(form)})
 
 
 @login_required
