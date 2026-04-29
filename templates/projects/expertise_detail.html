@@ -99,34 +99,76 @@
         </div>
       </div>
 
-      <!-- Dossier Status -->
+      <!-- Dossier Status par spécialité -->
       <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-dark text-white py-2">
-          <i class="bi bi-folder me-2"></i><strong>Dossier</strong>
+          <i class="bi bi-folder me-2"></i><strong>Dossiers par spécialité</strong>
         </div>
         <div class="card-body">
-          <div class="row g-3 align-items-center">
-            <div class="col-md-4">
-              <label class="text-muted small">Statut du dossier</label>
-              <div class="mt-1">
-                <span class="badge-status status-{{ expertise.dossier_status }}">
-                  {{ expertise.get_dossier_status_display }}
-                </span>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <label class="text-muted small">Date de complétion</label>
+          <div class="table-responsive mb-3">
+            <table class="table table-bordered align-middle small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Spécialité</th>
+                  <th class="text-center">Statut</th>
+                  <th class="text-center">Date réception</th>
+                  <th class="text-center">Date décision</th>
+                  <th class="text-center">Délai 21j</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if expertise.has_structure %}
+                <tr>
+                  <td><span class="spec-badge spec-str">Structure</span></td>
+                  <td class="text-center"><span class="badge-status status-{{ expertise.dossier_structure }}">{{ expertise.get_dossier_structure_display }}</span></td>
+                  <td class="text-center">{{ expertise.dossier_structure_received_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{{ expertise.dossier_structure_decision_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{% with d=expertise.dossier_structure_days_remaining %}{% if d is not None %}<span class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</span>{% else %}–{% endif %}{% endwith %}</td>
+                </tr>
+                {% endif %}
+                {% if expertise.has_electricite %}
+                <tr>
+                  <td><span class="spec-badge spec-elec">Électricité</span></td>
+                  <td class="text-center"><span class="badge-status status-{{ expertise.dossier_electricite }}">{{ expertise.get_dossier_electricite_display }}</span></td>
+                  <td class="text-center">{{ expertise.dossier_electricite_received_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{{ expertise.dossier_electricite_decision_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{% with d=expertise.dossier_electricite_days_remaining %}{% if d is not None %}<span class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</span>{% else %}–{% endif %}{% endwith %}</td>
+                </tr>
+                {% endif %}
+                {% if expertise.has_fluide %}
+                <tr>
+                  <td><span class="spec-badge spec-fl">Fluide</span></td>
+                  <td class="text-center"><span class="badge-status status-{{ expertise.dossier_fluide }}">{{ expertise.get_dossier_fluide_display }}</span></td>
+                  <td class="text-center">{{ expertise.dossier_fluide_received_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{{ expertise.dossier_fluide_decision_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{% with d=expertise.dossier_fluide_days_remaining %}{% if d is not None %}<span class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</span>{% else %}–{% endif %}{% endwith %}</td>
+                </tr>
+                {% endif %}
+                {% if expertise.has_securite_incendie %}
+                <tr>
+                  <td><span class="spec-badge spec-si">Sécurité incendie</span></td>
+                  <td class="text-center"><span class="badge-status status-{{ expertise.dossier_securite_incendie }}">{{ expertise.get_dossier_securite_incendie_display }}</span></td>
+                  <td class="text-center">{{ expertise.dossier_securite_incendie_received_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{{ expertise.dossier_securite_incendie_decision_date|date:"d/m/Y"|default:"–" }}</td>
+                  <td class="text-center">{% with d=expertise.dossier_securite_incendie_days_remaining %}{% if d is not None %}<span class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</span>{% else %}–{% endif %}{% endwith %}</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="text-muted small">Date de complétion globale</label>
               <div>
                 {% if expertise.dossier_completed_date %}
-                  <i class="bi bi-check-circle-fill text-success me-1"></i>
-                  {{ expertise.dossier_completed_date|date:"d/m/Y" }}
+                  <i class="bi bi-check-circle-fill text-success me-1"></i>{{ expertise.dossier_completed_date|date:"d/m/Y" }}
                 {% else %}
                   <span class="text-muted">–</span>
                 {% endif %}
               </div>
             </div>
-            <div class="col-md-4">
-              <label class="text-muted small">Échéance facture (+60j)</label>
+            <div class="col-md-6">
+              <label class="text-muted small">Échéance rapport (+60j)</label>
               <div>
                 {% if expertise.invoice_due_date %}
                   {% with days=expertise.invoice_days_remaining %}
@@ -200,16 +242,16 @@
     <!-- Right Column -->
     <div class="col-lg-4">
 
-      <!-- Facture -->
+      <!-- Rapport -->
       <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-dark text-white py-2">
-          <i class="bi bi-receipt me-2"></i><strong>Facture</strong>
+          <i class="bi bi-file-text me-2"></i><strong>Rapport</strong>
         </div>
         <div class="card-body">
           {% if invoice %}
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-receipt me-1"></i>Facture expertise
+                <i class="bi bi-file-text me-1"></i>Rapport expertise
                 {% if invoice.is_complete %}
                   <span class="badge bg-success ms-1 small">Complète</span>
                 {% elif invoice.is_established %}
@@ -257,13 +299,13 @@
             {% if invoice.is_complete %}
               <div class="mt-2 p-2 rounded-2 bg-success bg-opacity-10 border border-success small">
                 <i class="bi bi-check-circle-fill text-success me-1"></i>
-                Facture établie et transmise – aucune alerte active.
+                Rapport établi et transmis – aucune alerte active.
               </div>
             {% endif %}
           {% else %}
-            <div class="text-muted small">Aucune facture.</div>
+            <div class="text-muted small">Aucun rapport.</div>
             <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-primary btn-sm mt-2">
-              <i class="bi bi-plus me-1"></i>Saisir la facture
+              <i class="bi bi-plus me-1"></i>Saisir le rapport
             </a>
           {% endif %}
         </div>

@@ -86,12 +86,19 @@
               <th>Gouvernorat</th>
               <th>M.O.</th>
               <th class="text-center">Spéc.</th>
-              <th class="text-center">Statut dossier</th>
-              <th class="text-center">Complétion</th>
-              <th class="text-center">Échéance facture</th>
-              <th class="text-center">Facture</th>
+              <th colspan="4" class="text-center border-start border-secondary" style="background:#1a3a5c;">Dossiers</th>
+              <th class="text-center">Échéance rapport</th>
+              <th class="text-center">Rapport</th>
               <th class="text-center border-start border-secondary">Alertes</th>
               <th class="text-end pe-3">Actions</th>
+            </tr>
+            <tr class="table-secondary small">
+              <th></th><th></th><th></th><th></th><th></th>
+              <th class="text-center border-start border-secondary">STR</th>
+              <th class="text-center">ELEC</th>
+              <th class="text-center">FL</th>
+              <th class="text-center">SI</th>
+              <th></th><th></th><th></th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -117,15 +124,29 @@
                   {% if e.has_securite_incendie %}<span class="spec-badge spec-si">SI</span>{% endif %}
                 </div>
               </td>
-              <td class="text-center">
-                <span class="badge-status status-{{ e.dossier_status }}">{{ e.get_dossier_status_display }}</span>
+              <td class="text-center border-start">
+                {% if e.has_structure %}
+                  <span class="badge-status status-{{ e.dossier_structure }}">{{ e.get_dossier_structure_display }}</span>
+                  {% with d=e.dossier_structure_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}R{{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                {% else %}<span class="text-muted">–</span>{% endif %}
               </td>
-              <td class="text-center small">
-                {% if e.dossier_completed_date %}
-                  <i class="bi bi-check-circle-fill text-success me-1"></i>{{ e.dossier_completed_date|date:"d/m/Y" }}
-                {% else %}
-                  <span class="text-muted">–</span>
-                {% endif %}
+              <td class="text-center">
+                {% if e.has_electricite %}
+                  <span class="badge-status status-{{ e.dossier_electricite }}">{{ e.get_dossier_electricite_display }}</span>
+                  {% with d=e.dossier_electricite_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}R{{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                {% else %}<span class="text-muted">–</span>{% endif %}
+              </td>
+              <td class="text-center">
+                {% if e.has_fluide %}
+                  <span class="badge-status status-{{ e.dossier_fluide }}">{{ e.get_dossier_fluide_display }}</span>
+                  {% with d=e.dossier_fluide_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}R{{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                {% else %}<span class="text-muted">–</span>{% endif %}
+              </td>
+              <td class="text-center">
+                {% if e.has_securite_incendie %}
+                  <span class="badge-status status-{{ e.dossier_securite_incendie }}">{{ e.get_dossier_securite_incendie_display }}</span>
+                  {% with d=e.dossier_securite_incendie_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}R{{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                {% else %}<span class="text-muted">–</span>{% endif %}
               </td>
               <td class="text-center small">
                 {% if e.invoice_due_date %}
@@ -193,7 +214,7 @@
             </tr>
             {% empty %}
             <tr>
-              <td colspan="11" class="text-center text-muted py-5">
+              <td colspan="13" class="text-center text-muted py-5">
                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                 Aucune expertise trouvée.
                 <a href="{% url 'expertise_create' %}">Créer la première expertise</a>

@@ -38,12 +38,18 @@ STATUS_CHOICES = [
     ('approuve', 'Approuvé'),
 ]
 
+DOSSIER_STATUS_CHOICES = [
+    ('non_recu', 'Dossier non reçu'),
+    ('non_approuve', 'Dossier non approuvé'),
+    ('en_cours', 'En cours de vérification'),
+    ('approuve', 'Approuvé'),
+]
+
 
 class Engineer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=200, verbose_name='Nom complet')
     email = models.EmailField(verbose_name='Email')
-    phone = models.CharField(max_length=20, blank=True, verbose_name='Téléphone')
     specialties = models.CharField(max_length=200, blank=True, verbose_name='Spécialités')
 
     class Meta:
@@ -93,6 +99,17 @@ class Project(models.Model):
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
         verbose_name='DAO Sécurité incendie'
     )
+
+    # --- DAO dates de réception / décision par spécialité ---
+    dao_structure_received_date = models.DateField(null=True, blank=True, verbose_name='DAO STR – Date réception')
+    dao_structure_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO STR – Date décision')
+    dao_electricite_received_date = models.DateField(null=True, blank=True, verbose_name='DAO ELEC – Date réception')
+    dao_electricite_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO ELEC – Date décision')
+    dao_fluide_received_date = models.DateField(null=True, blank=True, verbose_name='DAO FL – Date réception')
+    dao_fluide_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO FL – Date décision')
+    dao_securite_incendie_received_date = models.DateField(null=True, blank=True, verbose_name='DAO SI – Date réception')
+    dao_securite_incendie_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO SI – Date décision')
+
     dao_completed_date = models.DateField(
         null=True, blank=True,
         verbose_name='Date de complétion DAO'
@@ -119,6 +136,17 @@ class Project(models.Model):
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
         verbose_name='EXE Sécurité incendie'
     )
+
+    # --- EXE dates de réception / décision par spécialité ---
+    exe_structure_received_date = models.DateField(null=True, blank=True, verbose_name='EXE STR – Date réception')
+    exe_structure_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE STR – Date décision')
+    exe_electricite_received_date = models.DateField(null=True, blank=True, verbose_name='EXE ELEC – Date réception')
+    exe_electricite_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE ELEC – Date décision')
+    exe_fluide_received_date = models.DateField(null=True, blank=True, verbose_name='EXE FL – Date réception')
+    exe_fluide_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE FL – Date décision')
+    exe_securite_incendie_received_date = models.DateField(null=True, blank=True, verbose_name='EXE SI – Date réception')
+    exe_securite_incendie_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE SI – Date décision')
+
     exe_started_date = models.DateField(null=True, blank=True, verbose_name='Date début EXE')
 
     # --- D6 ---
@@ -230,6 +258,7 @@ class Project(models.Model):
         return (
             self.planned_visits > 0
             and self.completed_visits >= self.planned_visits
+            and self.d6_done
             and self.rpro
             and self.rdef
         )
@@ -253,6 +282,45 @@ class Project(models.Model):
             self.dao_completed_date = date.today()
         super().save(*args, **kwargs)
 
+    def _days_remaining(self, status_field):
+        status = getattr(self, status_field)
+        received = getattr(self, f'{status_field}_received_date', None)
+        if status == 'en_cours' and received:
+            return (received + timedelta(days=21) - date.today()).days
+        return None
+
+    @property
+    def dao_structure_days_remaining(self):
+        return self._days_remaining('dao_structure')
+
+    @property
+    def dao_electricite_days_remaining(self):
+        return self._days_remaining('dao_electricite')
+
+    @property
+    def dao_fluide_days_remaining(self):
+        return self._days_remaining('dao_fluide')
+
+    @property
+    def dao_securite_incendie_days_remaining(self):
+        return self._days_remaining('dao_securite_incendie')
+
+    @property
+    def exe_structure_days_remaining(self):
+        return self._days_remaining('exe_structure')
+
+    @property
+    def exe_electricite_days_remaining(self):
+        return self._days_remaining('exe_electricite')
+
+    @property
+    def exe_fluide_days_remaining(self):
+        return self._days_remaining('exe_fluide')
+
+    @property
+    def exe_securite_incendie_days_remaining(self):
+        return self._days_remaining('exe_securite_incendie')
+
 
 class Expertise(models.Model):
     name = models.CharField(max_length=300, verbose_name="Intitulé de l'expertise")
@@ -266,10 +334,34 @@ class Expertise(models.Model):
     has_securite_incendie = models.BooleanField(default=False, verbose_name='Sécurité incendie')
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
 
-    dossier_status = models.CharField(
+    # --- Statut du dossier par spécialité ---
+    dossier_structure = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
-        verbose_name='Statut du dossier'
+        verbose_name='Dossier Structure'
     )
+    dossier_electricite = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='Dossier Électricité'
+    )
+    dossier_fluide = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='Dossier Fluide'
+    )
+    dossier_securite_incendie = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='Dossier Sécurité incendie'
+    )
+
+    # --- Dates de réception / décision par spécialité ---
+    dossier_structure_received_date = models.DateField(null=True, blank=True, verbose_name='STR – Date réception')
+    dossier_structure_decision_date = models.DateField(null=True, blank=True, verbose_name='STR – Date décision')
+    dossier_electricite_received_date = models.DateField(null=True, blank=True, verbose_name='ELEC – Date réception')
+    dossier_electricite_decision_date = models.DateField(null=True, blank=True, verbose_name='ELEC – Date décision')
+    dossier_fluide_received_date = models.DateField(null=True, blank=True, verbose_name='FL – Date réception')
+    dossier_fluide_decision_date = models.DateField(null=True, blank=True, verbose_name='FL – Date décision')
+    dossier_securite_incendie_received_date = models.DateField(null=True, blank=True, verbose_name='SI – Date réception')
+    dossier_securite_incendie_decision_date = models.DateField(null=True, blank=True, verbose_name='SI – Date décision')
+
     dossier_completed_date = models.DateField(null=True, blank=True, verbose_name='Date de complétion du dossier')
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -289,7 +381,40 @@ class Expertise(models.Model):
 
     @property
     def dossier_complete(self):
-        return self.dossier_status == 'approuve'
+        if not any([self.has_structure, self.has_electricite, self.has_fluide, self.has_securite_incendie]):
+            return False
+        if self.has_structure and self.dossier_structure != 'approuve':
+            return False
+        if self.has_electricite and self.dossier_electricite != 'approuve':
+            return False
+        if self.has_fluide and self.dossier_fluide != 'approuve':
+            return False
+        if self.has_securite_incendie and self.dossier_securite_incendie != 'approuve':
+            return False
+        return True
+
+    def _dossier_days_remaining(self, status_field):
+        status = getattr(self, status_field)
+        received = getattr(self, f'{status_field}_received_date', None)
+        if status == 'en_cours' and received:
+            return (received + timedelta(days=21) - date.today()).days
+        return None
+
+    @property
+    def dossier_structure_days_remaining(self):
+        return self._dossier_days_remaining('dossier_structure')
+
+    @property
+    def dossier_electricite_days_remaining(self):
+        return self._dossier_days_remaining('dossier_electricite')
+
+    @property
+    def dossier_fluide_days_remaining(self):
+        return self._dossier_days_remaining('dossier_fluide')
+
+    @property
+    def dossier_securite_incendie_days_remaining(self):
+        return self._dossier_days_remaining('dossier_securite_incendie')
 
     @property
     def invoice_due_date(self):

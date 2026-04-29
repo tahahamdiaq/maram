@@ -4,7 +4,7 @@ from .models import Project, Engineer, Invoice, ProjectObservation, Expertise, E
 
 @admin.register(Engineer)
 class EngineerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'email', 'phone', 'specialties']
+    list_display = ['name', 'email', 'specialties']
     search_fields = ['name', 'email']
 
 
@@ -90,8 +90,8 @@ class ExpertiseObservationInline(admin.TabularInline):
 
 @admin.register(Expertise)
 class ExpertiseAdmin(admin.ModelAdmin):
-    list_display = ['bon_commande_number', 'name', 'gouvernorat', 'maitre_ouvrage', 'dossier_status', 'dossier_completed_date']
-    list_filter = ['gouvernorat', 'dossier_status']
+    list_display = ['bon_commande_number', 'name', 'gouvernorat', 'maitre_ouvrage', 'dossier_structure', 'dossier_completed_date']
+    list_filter = ['gouvernorat', 'dossier_structure']
     search_fields = ['name', 'bon_commande_number', 'maitre_ouvrage']
     filter_horizontal = ['engineers']
     inlines = [ExpertiseInvoiceInline, ExpertiseObservationInline]

@@ -69,18 +69,53 @@
       </div>
     </div>
 
-    <!-- Dossier -->
+    <!-- Dossier par spécialité -->
     <div class="card border-0 shadow-sm mb-3">
       <div class="card-header bg-dark text-white py-2">
-        <i class="bi bi-folder me-2"></i><strong>Statut du dossier</strong>
+        <i class="bi bi-folder me-2"></i><strong>Statut des dossiers par spécialité</strong>
       </div>
       <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-6">{{ form.dossier_status|as_crispy_field }}</div>
-          <div class="col-md-6">
-            {{ form.dossier_completed_date|as_crispy_field }}
-            <small class="text-muted">Renseigné automatiquement à la date d'approbation. Modifiable si nécessaire.</small>
-          </div>
+        <div class="table-responsive mb-3">
+          <table class="table table-bordered align-middle small mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Spécialité</th>
+                <th class="text-center">Statut</th>
+                <th class="text-center">Date réception</th>
+                <th class="text-center">Date décision</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="row-dossier-str">
+                <td><span class="spec-badge spec-str">Structure</span></td>
+                <td>{{ form.dossier_structure }}</td>
+                <td>{{ form.dossier_structure_received_date }}</td>
+                <td>{{ form.dossier_structure_decision_date }}</td>
+              </tr>
+              <tr id="row-dossier-elec">
+                <td><span class="spec-badge spec-elec">Électricité</span></td>
+                <td>{{ form.dossier_electricite }}</td>
+                <td>{{ form.dossier_electricite_received_date }}</td>
+                <td>{{ form.dossier_electricite_decision_date }}</td>
+              </tr>
+              <tr id="row-dossier-fl">
+                <td><span class="spec-badge spec-fl">Fluide</span></td>
+                <td>{{ form.dossier_fluide }}</td>
+                <td>{{ form.dossier_fluide_received_date }}</td>
+                <td>{{ form.dossier_fluide_decision_date }}</td>
+              </tr>
+              <tr id="row-dossier-si">
+                <td><span class="spec-badge spec-si">Sécurité incendie</span></td>
+                <td>{{ form.dossier_securite_incendie }}</td>
+                <td>{{ form.dossier_securite_incendie_received_date }}</td>
+                <td>{{ form.dossier_securite_incendie_decision_date }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-4">
+          {{ form.dossier_completed_date|as_crispy_field }}
+          <small class="text-muted">Renseigné automatiquement à l'approbation complète. Modifiable si nécessaire.</small>
         </div>
       </div>
     </div>

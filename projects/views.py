@@ -137,11 +137,62 @@ def project_create(request):
     return render(request, 'projects/form.html', {'form': form, 'action': 'Créer'})
 
 
+_DOSSIER_FIELDS = [
+    ('dao_structure',         'DAO Structure'),
+    ('dao_electricite',       'DAO Électricité'),
+    ('dao_fluide',            'DAO Fluide'),
+    ('dao_securite_incendie', 'DAO Sécurité incendie'),
+    ('exe_structure',         'EXE Structure'),
+    ('exe_electricite',       'EXE Électricité'),
+    ('exe_fluide',            'EXE Fluide'),
+    ('exe_securite_incendie', 'EXE Sécurité incendie'),
+]
+
+_EXPERTISE_DOSSIER_FIELDS = [
+    ('dossier_structure',         'Dossier Structure'),
+    ('dossier_electricite',       'Dossier Électricité'),
+    ('dossier_fluide',            'Dossier Fluide'),
+    ('dossier_securite_incendie', 'Dossier Sécurité incendie'),
+]
+
+def _handle_dossier_changes(instance, old_statuses, field_pairs, observation_class, obs_kwargs, user):
+    from .models import STATUS_CHOICES
+    status_labels = dict(STATUS_CHOICES)
+    date_updates = {}
+    obs_list = []
+
+    for field, label in field_pairs:
+        new_status = getattr(instance, field)
+        old_status = old_statuses.get(field)
+        if new_status != old_status:
+            obs_list.append(observation_class(
+                **obs_kwargs,
+                date=date.today(),
+                text=f'{label} : {status_labels.get(old_status, old_status)} → {status_labels.get(new_status, new_status)}',
+                is_auto=True,
+                created_by=user,
+            ))
+            received_field = f'{field}_received_date'
+            decision_field = f'{field}_decision_date'
+            if new_status == 'en_cours' and not getattr(instance, received_field, None):
+                date_updates[received_field] = date.today()
+            elif new_status in ('approuve', 'non_approuve') and not getattr(instance, decision_field, None):
+                date_updates[decision_field] = date.today()
+
+    if obs_list:
+        observation_class.objects.bulk_create(obs_list)
+    if date_updates:
+        for f, v in date_updates.items():
+            setattr(instance, f, v)
+        instance.save(update_fields=list(date_updates.keys()))
+
+
 @login_required
 def project_edit(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if request.method == 'POST':
         old_engineers = set(project.engineers.values_list('pk', flat=True))
+        old_statuses = {f: getattr(project, f) for f, _ in _DOSSIER_FIELDS}
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
@@ -150,6 +201,10 @@ def project_edit(request, pk):
                 project.notifications.filter(
                     status__in=['unread', 'read'], email_sent=True
                 ).update(email_sent=False)
+            _handle_dossier_changes(
+                project, old_statuses, _DOSSIER_FIELDS,
+                ProjectObservation, {'project': project}, request.user
+            )
             check_project_notifications(project)
             messages.success(request, 'Projet mis à jour avec succès.')
             return redirect('project_detail', pk=project.pk)
@@ -367,7 +422,7 @@ def expertise_list(request):
         if gouvernorat:
             expertises = expertises.filter(gouvernorat=gouvernorat)
         if dossier_status:
-            expertises = expertises.filter(dossier_status=dossier_status)
+            from django.db.models import Q as _Q; expertises = expertises.filter(_Q(dossier_structure=dossier_status) | _Q(dossier_electricite=dossier_status) | _Q(dossier_fluide=dossier_status) | _Q(dossier_securite_incendie=dossier_status))
 
     from notifications_app.models import Notification
     critical_count = Notification.objects.filter(
@@ -421,6 +476,7 @@ def expertise_edit(request, pk):
     expertise = get_object_or_404(Expertise, pk=pk)
     if request.method == 'POST':
         old_engineers = set(expertise.engineers.values_list('pk', flat=True))
+        old_statuses = {f: getattr(expertise, f) for f, _ in _EXPERTISE_DOSSIER_FIELDS}
         form = ExpertiseForm(request.POST, instance=expertise)
         if form.is_valid():
             form.save()
@@ -429,6 +485,10 @@ def expertise_edit(request, pk):
                 expertise.notifications.filter(
                     status__in=['unread', 'read'], email_sent=True
                 ).update(email_sent=False)
+            _handle_dossier_changes(
+                expertise, old_statuses, _EXPERTISE_DOSSIER_FIELDS,
+                ExpertiseObservation, {'expertise': expertise}, request.user
+            )
             check_expertise_notifications(expertise)
             messages.success(request, 'Expertise mise à jour.')
             return redirect('expertise_detail', pk=expertise.pk)
@@ -515,7 +575,7 @@ def expertise_list_export_pdf(request):
         if gouvernorat:
             expertises = expertises.filter(gouvernorat=gouvernorat)
         if dossier_status:
-            expertises = expertises.filter(dossier_status=dossier_status)
+            from django.db.models import Q as _Q; expertises = expertises.filter(_Q(dossier_structure=dossier_status) | _Q(dossier_electricite=dossier_status) | _Q(dossier_fluide=dossier_status) | _Q(dossier_securite_incendie=dossier_status))
 
     pdf_bytes = build_expertise_list_pdf(expertises)
     filename = f'{date.today().isoformat()}-WTI-GC.pdf'

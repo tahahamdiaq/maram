@@ -122,29 +122,69 @@
                 {% if project.has_structure %}
                 <tr>
                   <td><span class="spec-badge spec-str">Structure</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.dao_structure }}">{{ project.get_dao_structure_display }}</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.exe_structure }}">{{ project.get_exe_structure_display }}</span></td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.dao_structure }}">{{ project.get_dao_structure_display }}</span>
+                    {% if project.dao_structure_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.dao_structure_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.dao_structure_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.dao_structure_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.dao_structure_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.exe_structure }}">{{ project.get_exe_structure_display }}</span>
+                    {% if project.exe_structure_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.exe_structure_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.exe_structure_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.exe_structure_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.exe_structure_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
                 </tr>
                 {% endif %}
                 {% if project.has_electricite %}
                 <tr>
                   <td><span class="spec-badge spec-elec">Électricité</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.dao_electricite }}">{{ project.get_dao_electricite_display }}</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.exe_electricite }}">{{ project.get_exe_electricite_display }}</span></td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.dao_electricite }}">{{ project.get_dao_electricite_display }}</span>
+                    {% if project.dao_electricite_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.dao_electricite_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.dao_electricite_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.dao_electricite_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.dao_electricite_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.exe_electricite }}">{{ project.get_exe_electricite_display }}</span>
+                    {% if project.exe_electricite_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.exe_electricite_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.exe_electricite_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.exe_electricite_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.exe_electricite_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
                 </tr>
                 {% endif %}
                 {% if project.has_fluide %}
                 <tr>
                   <td><span class="spec-badge spec-fl">Fluide</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.dao_fluide }}">{{ project.get_dao_fluide_display }}</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.exe_fluide }}">{{ project.get_exe_fluide_display }}</span></td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.dao_fluide }}">{{ project.get_dao_fluide_display }}</span>
+                    {% if project.dao_fluide_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.dao_fluide_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.dao_fluide_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.dao_fluide_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.dao_fluide_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.exe_fluide }}">{{ project.get_exe_fluide_display }}</span>
+                    {% if project.exe_fluide_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.exe_fluide_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.exe_fluide_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.exe_fluide_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.exe_fluide_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
                 </tr>
                 {% endif %}
                 {% if project.has_securite_incendie %}
                 <tr>
                   <td><span class="spec-badge spec-si">Sécurité incendie</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.dao_securite_incendie }}">{{ project.get_dao_securite_incendie_display }}</span></td>
-                  <td class="text-center"><span class="badge-status status-{{ project.exe_securite_incendie }}">{{ project.get_exe_securite_incendie_display }}</span></td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.dao_securite_incendie }}">{{ project.get_dao_securite_incendie_display }}</span>
+                    {% if project.dao_securite_incendie_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.dao_securite_incendie_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.dao_securite_incendie_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.dao_securite_incendie_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.dao_securite_incendie_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge-status status-{{ project.exe_securite_incendie }}">{{ project.get_exe_securite_incendie_display }}</span>
+                    {% if project.exe_securite_incendie_received_date %}<div class="text-muted" style="font-size:.7rem;">Reçu : {{ project.exe_securite_incendie_received_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% if project.exe_securite_incendie_decision_date %}<div class="text-muted" style="font-size:.7rem;">Décision : {{ project.exe_securite_incendie_decision_date|date:"d/m/Y" }}</div>{% endif %}
+                    {% with d=project.exe_securite_incendie_days_remaining %}{% if d is not None %}<div class="badge {% if d < 0 %}bg-danger blink{% elif d <= 5 %}bg-danger{% elif d <= 10 %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}" style="font-size:.65rem;">{% if d < 0 %}Retard {{ d|cut:"-" }}j{% else %}J-{{ d }}{% endif %}</div>{% endif %}{% endwith %}
+                  </td>
                 </tr>
                 {% endif %}
               </tbody>

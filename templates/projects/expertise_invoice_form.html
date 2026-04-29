@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}Facture – {{ expertise.name }} – WTI-GC{% endblock %}
-{% block page_title %}Facture expertise{% endblock %}
+{% block title %}Rapport – {{ expertise.name }} – WTI-GC{% endblock %}
+{% block page_title %}Rapport expertise{% endblock %}
 
 {% block content %}
 <div class="pt-3">
@@ -10,7 +10,7 @@
     <ol class="breadcrumb mb-0">
       <li class="breadcrumb-item"><a href="{% url 'expertise_list' %}">Expertises</a></li>
       <li class="breadcrumb-item"><a href="{% url 'expertise_detail' expertise.pk %}">{{ expertise.bon_commande_number }}</a></li>
-      <li class="breadcrumb-item active">Facture</li>
+      <li class="breadcrumb-item active">Rapport</li>
     </ol>
   </nav>
 
@@ -28,11 +28,11 @@
 
   <div class="card border-0 shadow-sm" style="max-width:600px;">
     <div class="card-header bg-dark text-white py-2">
-      <i class="bi bi-receipt me-2"></i><strong>Facture – {{ expertise.name }}</strong>
+      <i class="bi bi-file-text me-2"></i><strong>Rapport – {{ expertise.name }}</strong>
     </div>
     <div class="card-body">
       <p class="text-muted small mb-3">
-        La facture est considérée <strong>complète</strong> (notifications arrêtées) uniquement lorsque
+        Le rapport est considéré <strong>complet</strong> (notifications arrêtées) uniquement lorsque
         les deux dates sont renseignées.
       </p>
       <form method="post">

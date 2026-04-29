@@ -13,15 +13,14 @@
     <div class="card-body p-0">
       <table class="table table-hover align-middle mb-0">
         <thead class="table-dark">
-          <tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Spécialités</th><th></th></tr>
+          <tr><th>Nom</th><th>Email</th><th>Spécialités</th><th></th></tr>
         </thead>
         <tbody>
           {% for eng in engineers %}
           <tr>
             <td class="fw-semibold">{{ eng.name }}</td>
             <td><a href="mailto:{{ eng.email }}">{{ eng.email }}</a></td>
-            <td>{{ eng.phone|default:"–" }}</td>
-            <td>{{ eng.specialties|default:"–" }}</td>
+<td>{{ eng.specialties|default:"–" }}</td>
             <td class="text-end">
               <a href="{% url 'engineer_edit' eng.pk %}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-pencil"></i>

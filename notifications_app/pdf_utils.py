@@ -243,7 +243,7 @@ def build_expertise_pdf(expertise):
     story.append(Paragraph('Dossier', _H2))
     story.append(Table([
         ['Champ', 'Valeur'],
-        _row('Statut du dossier',       expertise.get_dossier_status_display()),
+        _row('Statut du dossier',       expertise.dossier_complete and 'Complété' or 'En cours'),
         _row('Date de complétion',      _date(expertise.dossier_completed_date)),
         _row('Échéance facture (+60j)', _date(expertise.invoice_due_date) if expertise.invoice_due_date else '–'),
         _row('Jours restants',          f'{expertise.invoice_days_remaining} j.' if expertise.invoice_days_remaining is not None else '–'),
@@ -392,7 +392,7 @@ def build_expertise_list_pdf(expertises):
             Paragraph(e.get_gouvernorat_display()[:12], CELL_S),
             Paragraph((e.maitre_ouvrage or '—')[:22], CELL_S),
             _spec(e),
-            _st(e.dossier_status),
+            _st('approuve' if e.dossier_complete else 'non_recu'),
             Paragraph(_date(e.dossier_completed_date), CELL_C),
             Paragraph(_date(e.invoice_due_date), CELL_C),
             _invoice_status(e),

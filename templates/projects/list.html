@@ -124,9 +124,7 @@
               <th class="text-center">D6</th>
               <th class="text-center">RPRO</th>
               <th class="text-center">RDEF</th>
-              <th class="text-center border-start border-secondary">F1</th>
-              <th class="text-center">F2</th>
-              <th class="text-center">F3</th>
+              <th colspan="3" class="text-center border-start border-secondary" style="background:#1a3a5c;">Factures</th>
               <th class="text-center border-start border-secondary">Alertes</th>
               <th class="text-end pe-3">Actions</th>
             </tr>
@@ -143,9 +141,9 @@
               <th class="text-center">SI</th>
               <th class="text-center border-start border-secondary"></th>
               <th></th><th></th><th></th>
-              <th class="text-center border-start border-secondary"></th>
-              <th class="text-center"></th>
-              <th class="text-center"></th>
+              <th class="text-center border-start border-secondary">F1</th>
+              <th class="text-center">F2</th>
+              <th class="text-center">F3</th>
               <th></th><th></th>
             </tr>
           </thead>
@@ -336,7 +334,7 @@
             {% endwith %}
             {% empty %}
             <tr>
-              <td colspan="22" class="text-center text-muted py-5">
+              <td colspan="23" class="text-center text-muted py-5">
                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                 Aucun projet trouvé.
                 <a href="{% url 'project_create' %}">Créer le premier projet</a>
