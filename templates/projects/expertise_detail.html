@@ -158,16 +158,6 @@
           </div>
           <div class="row g-2">
             <div class="col-md-6">
-              <label class="text-muted small">Date de complétion globale</label>
-              <div>
-                {% if expertise.dossier_completed_date %}
-                  <i class="bi bi-check-circle-fill text-success me-1"></i>{{ expertise.dossier_completed_date|date:"d/m/Y" }}
-                {% else %}
-                  <span class="text-muted">–</span>
-                {% endif %}
-              </div>
-            </div>
-            <div class="col-md-6">
               <label class="text-muted small">Échéance rapport (+60j)</label>
               <div>
                 {% if expertise.invoice_due_date %}

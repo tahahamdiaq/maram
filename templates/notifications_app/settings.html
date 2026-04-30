@@ -7,95 +7,266 @@
   <form method="post">
     {% csrf_token %}
 
-    <h5 class="fw-bold mb-3">Projets</h5>
-    {% for obj, label in project_settings %}
-    {% with prefix="ns_"|add:obj.notification_type %}
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header py-2 d-flex justify-content-between align-items-center
-                  {% if obj.notification_type == 'facture1_j2' or obj.notification_type == 'facture1_overdue' %}bg-danger text-white
-                  {% elif obj.notification_type == 'facture1_j7' or obj.notification_type == 'facture3_ready' %}bg-warning
-                  {% else %}bg-light{% endif %}">
-        <strong>{{ label }}</strong>
-        <div class="form-check form-switch mb-0">
-          <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
-                 {% if obj.is_active %}checked{% endif %}>
-          <label class="form-check-label" for="{{ prefix }}_active">Actif</label>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-3">
-            <label class="form-label small fw-semibold">Canal</label>
-            <select name="{{ prefix }}_channel" class="form-select form-select-sm">
-              <option value="both" {% if obj.channel == 'both' %}selected{% endif %}>Application + Email</option>
-              <option value="app" {% if obj.channel == 'app' %}selected{% endif %}>Application seulement</option>
-              <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label small fw-semibold">Destinataires</label>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
-                     id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
-              <label class="form-check-label small" for="{{ prefix }}_engineers">Ingénieurs du projet</label>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-semibold">Emails supplémentaires</label>
-            <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="2"
-                      placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endwith %}
-    {% endfor %}
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-0" id="notifTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-semibold" id="tab-projets-btn"
+                data-bs-toggle="tab" data-bs-target="#tab-projets"
+                type="button" role="tab">
+          <i class="bi bi-folder2-open me-1"></i>Projets
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold" id="tab-expertises-btn"
+                data-bs-toggle="tab" data-bs-target="#tab-expertises"
+                type="button" role="tab">
+          <i class="bi bi-clipboard2-pulse me-1"></i>Expertises
+        </button>
+      </li>
+    </ul>
 
-    <hr class="my-4">
-    <h5 class="fw-bold mb-3">Expertises</h5>
-    {% for obj, label in expertise_settings %}
-    {% with prefix="ns_"|add:obj.notification_type %}
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-header py-2 d-flex justify-content-between align-items-center bg-light">
-        <strong>{{ label }}</strong>
-        <div class="form-check form-switch mb-0">
-          <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
-                 {% if obj.is_active %}checked{% endif %}>
-          <label class="form-check-label" for="{{ prefix }}_active">Actif</label>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-3">
-            <label class="form-label small fw-semibold">Canal</label>
-            <select name="{{ prefix }}_channel" class="form-select form-select-sm">
-              <option value="both" {% if obj.channel == 'both' %}selected{% endif %}>Application + Email</option>
-              <option value="app" {% if obj.channel == 'app' %}selected{% endif %}>Application seulement</option>
-              <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label small fw-semibold">Destinataires</label>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
-                     id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
-              <label class="form-check-label small" for="{{ prefix }}_engineers">Ingénieurs du projet</label>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-semibold">Emails supplémentaires</label>
-            <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="2"
-                      placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endwith %}
-    {% endfor %}
+    <div class="tab-content border border-top-0 rounded-bottom shadow-sm bg-white p-4 mb-4">
 
-    <button type="submit" class="btn btn-primary">
-      <i class="bi bi-save me-1"></i>Enregistrer les paramètres
-    </button>
+      <!-- ═══════════════════════ PROJETS ═══════════════════════ -->
+      <div class="tab-pane fade show active" id="tab-projets" role="tabpanel">
+
+        <!-- Factures -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge bg-primary fs-6 px-3 py-2"><i class="bi bi-receipt me-1"></i>Factures</span>
+            <span class="text-muted small">Alertes liées à l'établissement et au suivi des factures</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:28%">Notification</th>
+                  <th class="text-center" style="width:8%">Actif</th>
+                  <th style="width:18%">Canal</th>
+                  <th style="width:14%">Destinataires</th>
+                  <th>Emails supplémentaires</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for obj, label in project_settings %}
+                {% if obj.notification_type == 'facture1_ready' or obj.notification_type == 'facture1_j7' or obj.notification_type == 'facture1_j2' or obj.notification_type == 'facture1_overdue' or obj.notification_type == 'facture2_ready' or obj.notification_type == 'facture3_ready' %}
+                {% with prefix="ns_"|add:obj.notification_type %}
+                <tr class="{% if obj.notification_type == 'facture1_j2' or obj.notification_type == 'facture1_overdue' %}table-danger{% elif obj.notification_type == 'facture1_j7' or obj.notification_type == 'facture3_ready' %}table-warning{% endif %}">
+                  <td class="fw-semibold">{{ label }}</td>
+                  <td class="text-center">
+                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
+                             {% if obj.is_active %}checked{% endif %}>
+                    </div>
+                  </td>
+                  <td>
+                    <select name="{{ prefix }}_channel" class="form-select form-select-sm">
+                      <option value="both"  {% if obj.channel == 'both'  %}selected{% endif %}>App + Email</option>
+                      <option value="app"   {% if obj.channel == 'app'   %}selected{% endif %}>App seulement</option>
+                      <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="form-check mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
+                             id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
+                      <label class="form-check-label" for="{{ prefix }}_engineers">Ingénieurs</label>
+                    </div>
+                  </td>
+                  <td>
+                    <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="1"
+                              placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
+                  </td>
+                </tr>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Dossiers DAO -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge fs-6 px-3 py-2" style="background:#1a3a5c;"><i class="bi bi-folder me-1"></i>Dossiers DAO</span>
+            <span class="text-muted small">Alertes sur les dossiers d'appel d'offres (avant exécution)</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:28%">Notification</th>
+                  <th class="text-center" style="width:8%">Actif</th>
+                  <th style="width:18%">Canal</th>
+                  <th style="width:14%">Destinataires</th>
+                  <th>Emails supplémentaires</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for obj, label in project_settings %}
+                {% if obj.notification_type == 'dao_str_alerte' or obj.notification_type == 'dao_elec_alerte' or obj.notification_type == 'dao_fl_alerte' %}
+                {% with prefix="ns_"|add:obj.notification_type %}
+                <tr>
+                  <td class="fw-semibold">{{ label }}</td>
+                  <td class="text-center">
+                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
+                             {% if obj.is_active %}checked{% endif %}>
+                    </div>
+                  </td>
+                  <td>
+                    <select name="{{ prefix }}_channel" class="form-select form-select-sm">
+                      <option value="both"  {% if obj.channel == 'both'  %}selected{% endif %}>App + Email</option>
+                      <option value="app"   {% if obj.channel == 'app'   %}selected{% endif %}>App seulement</option>
+                      <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="form-check mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
+                             id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
+                      <label class="form-check-label" for="{{ prefix }}_engineers">Ingénieurs</label>
+                    </div>
+                  </td>
+                  <td>
+                    <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="1"
+                              placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
+                  </td>
+                </tr>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Dossiers EXE -->
+        <div class="mb-2">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge bg-secondary fs-6 px-3 py-2"><i class="bi bi-folder-check me-1"></i>Dossiers EXE</span>
+            <span class="text-muted small">Alertes sur les dossiers d'exécution</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:28%">Notification</th>
+                  <th class="text-center" style="width:8%">Actif</th>
+                  <th style="width:18%">Canal</th>
+                  <th style="width:14%">Destinataires</th>
+                  <th>Emails supplémentaires</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for obj, label in project_settings %}
+                {% if obj.notification_type == 'exe_str_alerte' or obj.notification_type == 'exe_elec_alerte' or obj.notification_type == 'exe_fl_alerte' %}
+                {% with prefix="ns_"|add:obj.notification_type %}
+                <tr>
+                  <td class="fw-semibold">{{ label }}</td>
+                  <td class="text-center">
+                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
+                             {% if obj.is_active %}checked{% endif %}>
+                    </div>
+                  </td>
+                  <td>
+                    <select name="{{ prefix }}_channel" class="form-select form-select-sm">
+                      <option value="both"  {% if obj.channel == 'both'  %}selected{% endif %}>App + Email</option>
+                      <option value="app"   {% if obj.channel == 'app'   %}selected{% endif %}>App seulement</option>
+                      <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="form-check mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
+                             id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
+                      <label class="form-check-label" for="{{ prefix }}_engineers">Ingénieurs</label>
+                    </div>
+                  </td>
+                  <td>
+                    <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="1"
+                              placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
+                  </td>
+                </tr>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-projets -->
+
+      <!-- ═══════════════════════ EXPERTISES ═══════════════════════ -->
+      <div class="tab-pane fade" id="tab-expertises" role="tabpanel">
+
+        <!-- Rapport -->
+        <div class="mb-2">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge bg-info text-dark fs-6 px-3 py-2"><i class="bi bi-file-text me-1"></i>Rapport</span>
+            <span class="text-muted small">Alertes liées à l'établissement et au suivi des rapports d'expertise</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:28%">Notification</th>
+                  <th class="text-center" style="width:8%">Actif</th>
+                  <th style="width:18%">Canal</th>
+                  <th style="width:14%">Destinataires</th>
+                  <th>Emails supplémentaires</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for obj, label in expertise_settings %}
+                {% with prefix="ns_"|add:obj.notification_type %}
+                <tr class="{% if obj.notification_type == 'expertise_facture_j3' or obj.notification_type == 'expertise_facture_overdue' %}table-danger{% elif obj.notification_type == 'expertise_facture_j10' %}table-warning{% endif %}">
+                  <td class="fw-semibold">{{ label }}</td>
+                  <td class="text-center">
+                    <div class="form-check form-switch d-flex justify-content-center mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_active" id="{{ prefix }}_active"
+                             {% if obj.is_active %}checked{% endif %}>
+                    </div>
+                  </td>
+                  <td>
+                    <select name="{{ prefix }}_channel" class="form-select form-select-sm">
+                      <option value="both"  {% if obj.channel == 'both'  %}selected{% endif %}>App + Email</option>
+                      <option value="app"   {% if obj.channel == 'app'   %}selected{% endif %}>App seulement</option>
+                      <option value="email" {% if obj.channel == 'email' %}selected{% endif %}>Email seulement</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div class="form-check mb-0">
+                      <input type="checkbox" class="form-check-input" name="{{ prefix }}_engineers"
+                             id="{{ prefix }}_engineers" {% if obj.send_to_project_engineers %}checked{% endif %}>
+                      <label class="form-check-label" for="{{ prefix }}_engineers">Ingénieurs</label>
+                    </div>
+                  </td>
+                  <td>
+                    <textarea name="{{ prefix }}_extra_emails" class="form-control form-control-sm" rows="1"
+                              placeholder="Un email par ligne">{{ obj.extra_emails }}</textarea>
+                  </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-expertises -->
+
+    </div><!-- /tab-content -->
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary px-4">
+        <i class="bi bi-save me-1"></i>Enregistrer les paramètres
+      </button>
+    </div>
+
   </form>
 </div>
 {% endblock %}

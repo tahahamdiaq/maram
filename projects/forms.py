@@ -225,12 +225,10 @@ class ExpertiseForm(forms.ModelForm):
             'dossier_electricite', 'dossier_electricite_received_date', 'dossier_electricite_decision_date',
             'dossier_fluide', 'dossier_fluide_received_date', 'dossier_fluide_decision_date',
             'dossier_securite_incendie', 'dossier_securite_incendie_received_date', 'dossier_securite_incendie_decision_date',
-            'dossier_completed_date',
         ]
         widgets = {
             'bon_commande_number':    forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
             'bon_commande_date':      forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_completed_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dossier_structure_received_date':           forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dossier_structure_decision_date':           forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dossier_electricite_received_date':         forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
@@ -246,7 +244,6 @@ class ExpertiseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         optional_dates = [
-            'dossier_completed_date',
             'dossier_structure_received_date', 'dossier_structure_decision_date',
             'dossier_electricite_received_date', 'dossier_electricite_decision_date',
             'dossier_fluide_received_date', 'dossier_fluide_decision_date',

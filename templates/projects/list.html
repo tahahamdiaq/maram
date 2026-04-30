@@ -179,22 +179,22 @@
               <td class="text-center border-start">
                 {% if p.has_structure %}
                   <span class="badge-status status-{{ p.dao_structure }}">{{ p.get_dao_structure_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">
                 {% if p.has_electricite %}
                   <span class="badge-status status-{{ p.dao_electricite }}">{{ p.get_dao_electricite_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">
                 {% if p.has_fluide %}
                   <span class="badge-status status-{{ p.dao_fluide }}">{{ p.get_dao_fluide_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">
                 {% if p.has_securite_incendie %}
                   <span class="badge-status status-{{ p.dao_securite_incendie }}">{{ p.get_dao_securite_incendie_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
 
               <!-- D0 -->
@@ -210,22 +210,22 @@
               <td class="text-center border-start">
                 {% if p.has_structure %}
                   <span class="badge-status status-{{ p.exe_structure }}">{{ p.get_exe_structure_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">
                 {% if p.has_electricite %}
                   <span class="badge-status status-{{ p.exe_electricite }}">{{ p.get_exe_electricite_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">
                 {% if p.has_fluide %}
                   <span class="badge-status status-{{ p.exe_fluide }}">{{ p.get_exe_fluide_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">
                 {% if p.has_securite_incendie %}
                   <span class="badge-status status-{{ p.exe_securite_incendie }}">{{ p.get_exe_securite_incendie_display }}</span>
-                {% else %}<span class="text-muted">–</span>{% endif %}
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
 
               <!-- Visites -->

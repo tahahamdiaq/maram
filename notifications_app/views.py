@@ -113,7 +113,14 @@ def login_verify(request):
 
 @login_required
 def notification_list(request):
-    notifications = Notification.objects.select_related('project', 'expertise').order_by('-created_at')
+    base_qs = Notification.objects.select_related('project', 'expertise').order_by('-created_at')
+
+    unread_count    = base_qs.filter(status='unread').count()
+    read_count      = base_qs.filter(status='read').count()
+    processed_count = base_qs.filter(status='processed').count()
+    total_count     = unread_count + read_count + processed_count
+
+    notifications = base_qs
 
     priority = request.GET.get('priority', '')
     status = request.GET.get('status', '')
@@ -141,6 +148,10 @@ def notification_list(request):
         'status_filter': status,
         'type_filter': notif_type,
         'entity_filter': entity,
+        'unread_count': unread_count,
+        'read_count': read_count,
+        'processed_count': processed_count,
+        'total_count': total_count,
     })
 
 
