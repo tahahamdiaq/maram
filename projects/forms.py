@@ -221,39 +221,14 @@ class ExpertiseForm(forms.ModelForm):
             'gouvernorat', 'maitre_ouvrage',
             'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie',
             'engineers',
-            'dossier_structure', 'dossier_structure_received_date', 'dossier_structure_decision_date',
-            'dossier_electricite', 'dossier_electricite_received_date', 'dossier_electricite_decision_date',
-            'dossier_fluide', 'dossier_fluide_received_date', 'dossier_fluide_decision_date',
-            'dossier_securite_incendie', 'dossier_securite_incendie_received_date', 'dossier_securite_incendie_decision_date',
+            'rapport_status',
         ]
         widgets = {
-            'bon_commande_number':    forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
-            'bon_commande_date':      forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_structure_received_date':           forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_structure_decision_date':           forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_electricite_received_date':         forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_electricite_decision_date':         forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_fluide_received_date':              forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_fluide_decision_date':              forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_securite_incendie_received_date':   forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'dossier_securite_incendie_decision_date':   forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'engineers':              forms.CheckboxSelectMultiple(),
-            'maitre_ouvrage':         forms.TextInput(attrs={'list': 'maitre-ouvrage-list'}),
+            'bon_commande_number': forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
+            'bon_commande_date':   forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'engineers':           forms.CheckboxSelectMultiple(),
+            'maitre_ouvrage':      forms.TextInput(attrs={'list': 'maitre-ouvrage-list'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        optional_dates = [
-            'dossier_structure_received_date', 'dossier_structure_decision_date',
-            'dossier_electricite_received_date', 'dossier_electricite_decision_date',
-            'dossier_fluide_received_date', 'dossier_fluide_decision_date',
-            'dossier_securite_incendie_received_date', 'dossier_securite_incendie_decision_date',
-        ]
-        for f in optional_dates:
-            self.fields[f].required = False
-        for f in ['dossier_structure', 'dossier_electricite', 'dossier_fluide', 'dossier_securite_incendie']:
-            self.fields[f].required = False
-            self.fields[f].choices = DOSSIER_STATUS_CHOICES
 
     def clean_bon_commande_number(self):
         value = self.cleaned_data.get('bon_commande_number', '')
@@ -265,14 +240,6 @@ class ExpertiseForm(forms.ModelForm):
         cleaned = super().clean()
         if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide'), cleaned.get('has_securite_incendie')]):
             raise forms.ValidationError("Veuillez sélectionner au moins une spécialité.")
-        for specialty, field in [
-            ('has_structure',         'dossier_structure'),
-            ('has_electricite',       'dossier_electricite'),
-            ('has_fluide',            'dossier_fluide'),
-            ('has_securite_incendie', 'dossier_securite_incendie'),
-        ]:
-            if not cleaned.get(specialty):
-                cleaned[field] = 'non_prevu'
         return cleaned
 
 
@@ -312,8 +279,12 @@ class ExpertiseFilterForm(forms.Form):
         ],
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    dossier_status = forms.ChoiceField(
+    rapport_status = forms.ChoiceField(
         required=False,
-        choices=[('', 'Tous les statuts')] + list(DOSSIER_STATUS_CHOICES),
+        choices=[
+            ('', 'Tous les statuts'),
+            ('non_effectue', 'Non encore effectué'),
+            ('en_cours', 'En cours'),
+        ],
         widget=forms.Select(attrs={'class': 'form-select'})
     )

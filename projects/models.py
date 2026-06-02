@@ -341,35 +341,14 @@ class Expertise(models.Model):
     has_securite_incendie = models.BooleanField(default=False, verbose_name='Sécurité incendie')
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
 
-    # --- Statut du dossier par spécialité ---
-    dossier_structure = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
-        verbose_name='Dossier Structure'
+    RAPPORT_STATUS_CHOICES = [
+        ('non_effectue', 'Non encore effectué'),
+        ('en_cours', 'En cours'),
+    ]
+    rapport_status = models.CharField(
+        max_length=20, choices=RAPPORT_STATUS_CHOICES, default='non_effectue',
+        verbose_name='Statut du rapport'
     )
-    dossier_electricite = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
-        verbose_name='Dossier Électricité'
-    )
-    dossier_fluide = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
-        verbose_name='Dossier Fluide'
-    )
-    dossier_securite_incendie = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
-        verbose_name='Dossier Sécurité incendie'
-    )
-
-    # --- Dates de réception / décision par spécialité ---
-    dossier_structure_received_date = models.DateField(null=True, blank=True, verbose_name='STR – Date réception')
-    dossier_structure_decision_date = models.DateField(null=True, blank=True, verbose_name='STR – Date décision')
-    dossier_electricite_received_date = models.DateField(null=True, blank=True, verbose_name='ELEC – Date réception')
-    dossier_electricite_decision_date = models.DateField(null=True, blank=True, verbose_name='ELEC – Date décision')
-    dossier_fluide_received_date = models.DateField(null=True, blank=True, verbose_name='FL – Date réception')
-    dossier_fluide_decision_date = models.DateField(null=True, blank=True, verbose_name='FL – Date décision')
-    dossier_securite_incendie_received_date = models.DateField(null=True, blank=True, verbose_name='SI – Date réception')
-    dossier_securite_incendie_decision_date = models.DateField(null=True, blank=True, verbose_name='SI – Date décision')
-
-    dossier_completed_date = models.DateField(null=True, blank=True, verbose_name='Date de complétion du dossier')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -387,47 +366,8 @@ class Expertise(models.Model):
         return f"{self.bon_commande_number} – {self.name}"
 
     @property
-    def dossier_complete(self):
-        if not any([self.has_structure, self.has_electricite, self.has_fluide, self.has_securite_incendie]):
-            return False
-        if self.has_structure and self.dossier_structure != 'approuve':
-            return False
-        if self.has_electricite and self.dossier_electricite != 'approuve':
-            return False
-        if self.has_fluide and self.dossier_fluide != 'approuve':
-            return False
-        if self.has_securite_incendie and self.dossier_securite_incendie != 'approuve':
-            return False
-        return True
-
-    def _dossier_days_remaining(self, status_field):
-        status = getattr(self, status_field)
-        received = getattr(self, f'{status_field}_received_date', None)
-        if status == 'en_cours' and received:
-            return (received + timedelta(days=21) - date.today()).days
-        return None
-
-    @property
-    def dossier_structure_days_remaining(self):
-        return self._dossier_days_remaining('dossier_structure')
-
-    @property
-    def dossier_electricite_days_remaining(self):
-        return self._dossier_days_remaining('dossier_electricite')
-
-    @property
-    def dossier_fluide_days_remaining(self):
-        return self._dossier_days_remaining('dossier_fluide')
-
-    @property
-    def dossier_securite_incendie_days_remaining(self):
-        return self._dossier_days_remaining('dossier_securite_incendie')
-
-    @property
     def invoice_due_date(self):
-        if self.dossier_completed_date:
-            return self.dossier_completed_date + timedelta(days=60)
-        return None
+        return self.bon_commande_date + timedelta(days=60)
 
     @property
     def invoice_days_remaining(self):
@@ -441,8 +381,6 @@ class Expertise(models.Model):
         return self.invoices.first()
 
     def save(self, *args, **kwargs):
-        if self.dossier_complete and not self.dossier_completed_date:
-            self.dossier_completed_date = date.today()
         super().save(*args, **kwargs)
 
 

@@ -87,8 +87,8 @@ def check_facture1(project, today, active):
         _resolve_notifications(project, facture1_types)
         return
 
-    # DAO not yet complete → nothing to do
-    if not project.dao_completed:
+    # DAO not yet complete or D0 not done → nothing to do
+    if not project.dao_completed or not project.d0_done:
         return
 
     due_date = project.invoice1_due_date
@@ -254,10 +254,6 @@ def check_expertise_notifications(expertise):
     # Invoice established + transmitted → resolve all, nothing more to do
     if invoice and invoice.is_complete:
         _resolve_expertise_notifications(expertise, facture_types)
-        return
-
-    # Dossier not approved yet → nothing
-    if not expertise.dossier_complete or not expertise.invoice_due_date:
         return
 
     due_date = expertise.invoice_due_date

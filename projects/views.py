@@ -171,13 +171,6 @@ _DOSSIER_FIELDS = [
     ('exe_securite_incendie', 'EXE Sécurité incendie'),
 ]
 
-_EXPERTISE_DOSSIER_FIELDS = [
-    ('dossier_structure',         'Dossier Structure'),
-    ('dossier_electricite',       'Dossier Électricité'),
-    ('dossier_fluide',            'Dossier Fluide'),
-    ('dossier_securite_incendie', 'Dossier Sécurité incendie'),
-]
-
 def _handle_dossier_changes(instance, old_statuses, field_pairs, observation_class, obs_kwargs, user):
     from .models import STATUS_CHOICES
     status_labels = dict(STATUS_CHOICES)
@@ -434,7 +427,7 @@ def expertise_list(request):
     if form.is_valid():
         search = form.cleaned_data.get('search')
         gouvernorat = form.cleaned_data.get('gouvernorat')
-        dossier_status = form.cleaned_data.get('dossier_status')
+        rapport_status = form.cleaned_data.get('rapport_status')
         if search:
             from django.db.models import Q
             expertises = expertises.filter(
@@ -444,8 +437,8 @@ def expertise_list(request):
             )
         if gouvernorat:
             expertises = expertises.filter(gouvernorat=gouvernorat)
-        if dossier_status:
-            from django.db.models import Q as _Q; expertises = expertises.filter(_Q(dossier_structure=dossier_status) | _Q(dossier_electricite=dossier_status) | _Q(dossier_fluide=dossier_status) | _Q(dossier_securite_incendie=dossier_status))
+        if rapport_status:
+            expertises = expertises.filter(rapport_status=rapport_status)
 
     from notifications_app.models import Notification
     critical_count = Notification.objects.filter(
@@ -499,7 +492,6 @@ def expertise_edit(request, pk):
     expertise = get_object_or_404(Expertise, pk=pk)
     if request.method == 'POST':
         old_engineers = set(expertise.engineers.values_list('pk', flat=True))
-        old_statuses = {f: getattr(expertise, f) for f, _ in _EXPERTISE_DOSSIER_FIELDS}
         form = ExpertiseForm(request.POST, instance=expertise)
         if form.is_valid():
             form.save()
@@ -508,10 +500,6 @@ def expertise_edit(request, pk):
                 expertise.notifications.filter(
                     status__in=['unread', 'read'], email_sent=True
                 ).update(email_sent=False)
-            _handle_dossier_changes(
-                expertise, old_statuses, _EXPERTISE_DOSSIER_FIELDS,
-                ExpertiseObservation, {'expertise': expertise}, request.user
-            )
             check_expertise_notifications(expertise)
             messages.success(request, 'Expertise mise à jour.')
             return redirect('expertise_detail', pk=expertise.pk)
@@ -588,7 +576,7 @@ def expertise_list_export_pdf(request):
     if form.is_valid():
         search         = form.cleaned_data.get('search')
         gouvernorat    = form.cleaned_data.get('gouvernorat')
-        dossier_status = form.cleaned_data.get('dossier_status')
+        rapport_status = form.cleaned_data.get('rapport_status')
         if search:
             expertises = expertises.filter(
                 Q(name__icontains=search) |
@@ -597,8 +585,8 @@ def expertise_list_export_pdf(request):
             )
         if gouvernorat:
             expertises = expertises.filter(gouvernorat=gouvernorat)
-        if dossier_status:
-            from django.db.models import Q as _Q; expertises = expertises.filter(_Q(dossier_structure=dossier_status) | _Q(dossier_electricite=dossier_status) | _Q(dossier_fluide=dossier_status) | _Q(dossier_securite_incendie=dossier_status))
+        if rapport_status:
+            expertises = expertises.filter(rapport_status=rapport_status)
 
     pdf_bytes = build_expertise_list_pdf(expertises)
     filename = f'{date.today().isoformat()}-WTI-GC.pdf'

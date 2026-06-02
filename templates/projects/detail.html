@@ -234,11 +234,14 @@
 
             <!-- D0 -->
             <div class="col-md-4">
-              <div class="p-3 rounded-3 {% if project.d0_done %}bg-success bg-opacity-10 border border-success{% else %}bg-light{% endif %}">
+              <div class="p-3 rounded-3 {% if project.d0_done %}bg-success bg-opacity-10 border border-success{% elif project.dao_completed %}bg-warning bg-opacity-25 border border-warning{% else %}bg-light{% endif %}">
                 <div class="text-muted small mb-1"><i class="bi bi-file-earmark me-1"></i>Dossier D0</div>
                 {% if project.d0_done %}
                   <div class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Réalisé</div>
                   <div class="text-muted small">{{ project.d0_date|date:"d/m/Y" }}</div>
+                {% elif project.dao_completed %}
+                  <div class="text-warning fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i>À réaliser</div>
+                  <div class="text-muted small">DAO approuvé – D0 requis avant Facture N°1</div>
                 {% else %}
                   <div class="text-muted">Non réalisé</div>
                 {% endif %}

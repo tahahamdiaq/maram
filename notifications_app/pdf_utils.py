@@ -239,13 +239,12 @@ def build_expertise_pdf(expertise):
     ]
     story.append(Table(id_data, colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
 
-    # ── Dossier ───────────────────────────────────────────────────────────────
-    story.append(Paragraph('Dossier', _H2))
+    # ── Rapport ───────────────────────────────────────────────────────────────
+    story.append(Paragraph('Rapport', _H2))
     story.append(Table([
         ['Champ', 'Valeur'],
-        _row('Statut du dossier',       expertise.dossier_complete and 'Complété' or 'En cours'),
-        _row('Date de complétion',      _date(expertise.dossier_completed_date)),
-        _row('Échéance facture (+60j)', _date(expertise.invoice_due_date) if expertise.invoice_due_date else '–'),
+        _row('Statut du rapport',       expertise.get_rapport_status_display()),
+        _row('Échéance rapport (+60j)', _date(expertise.invoice_due_date)),
         _row('Jours restants',          f'{expertise.invoice_days_remaining} j.' if expertise.invoice_days_remaining is not None else '–'),
     ], colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
 
@@ -379,7 +378,7 @@ def build_expertise_list_pdf(expertises):
 
     headers = [
         _h('#'), _h('N°BC'), _h('Expertise'), _h('Gouv.'), _h('M.O.'), _h('Spéc.'),
-        _h('Statut\ndossier'), _h('Complétion'), _h('Échéance\nfacture'), _h('Facture'),
+        _h('Statut\nrapport'), _h('Statut'), _h('Échéance\nrapport'), _h('Facture'),
     ]
 
     expertises = list(expertises)
@@ -392,8 +391,8 @@ def build_expertise_list_pdf(expertises):
             Paragraph(e.get_gouvernorat_display()[:12], CELL_S),
             Paragraph((e.maitre_ouvrage or '—')[:22], CELL_S),
             _spec(e),
-            _st('approuve' if e.dossier_complete else 'non_recu'),
-            Paragraph(_date(e.dossier_completed_date), CELL_C),
+            _st(e.rapport_status),
+            Paragraph(e.get_rapport_status_display(), CELL_C),
             Paragraph(_date(e.invoice_due_date), CELL_C),
             _invoice_status(e),
         ])
