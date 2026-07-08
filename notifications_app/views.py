@@ -36,7 +36,7 @@ def custom_login(request):
             })
 
         # Bypass OTP for the test account
-        if user.username == 'rajettest':
+        if user.username == 'maramwtigc':
             login(request, user)
             return redirect(next_url)
 

@@ -230,8 +230,10 @@
 
               <!-- Visites -->
               <td class="text-center border-start" style="min-width:90px;">
-                <div class="small fw-semibold">{{ p.completed_visits }}/{{ p.planned_visits }}</div>
-                {% if p.planned_visits > 0 %}
+                {% if p.planned_visits == 0 %}
+                  <div class="small fw-semibold text-muted">F</div>
+                {% else %}
+                  <div class="small fw-semibold">{{ p.completed_visits }}/{{ p.planned_visits }}</div>
                   <div class="progress" style="height:5px; overflow:hidden;">
                     <div class="progress-bar {% if p.visit_percentage >= 100 %}bg-success{% elif p.visit_percentage >= 50 %}bg-info{% else %}bg-warning{% endif %}"
                          role="progressbar"
@@ -268,7 +270,7 @@
                   <span class="badge bg-success" title="{{ inv1.establishment_date|date:'d/m/Y' }}">
                     <i class="bi bi-check"></i>
                   </span>
-                {% elif p.dao_completed %}
+                {% elif p.dao_completed and p.d0_done %}
                   {% with days=p.invoice1_days_remaining %}
                     {% if days is not None %}
                       {% if days < 0 %}

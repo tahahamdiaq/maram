@@ -105,10 +105,12 @@ def project_detail(request, pk):
         pk=pk
     )
     obs_form = ObservationForm()
+    inv_map = {inv.invoice_number: inv for inv in project.invoices.all()}
     return render(request, 'projects/detail.html', {
         'project': project,
         'obs_form': obs_form,
-        'invoices': {inv.invoice_number: inv for inv in project.invoices.all()},
+        'invoices': inv_map,
+        'invoice_list': [(n, inv_map.get(n)) for n in [1, 2, 3]],
         'observations': project.observations.all(),
         'notifications': project.notifications.filter(status__in=['unread', 'read']).order_by('-created_at'),
     })

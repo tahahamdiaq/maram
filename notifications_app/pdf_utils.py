@@ -378,12 +378,22 @@ def build_expertise_list_pdf(expertises):
 
     headers = [
         _h('#'), _h('N°BC'), _h('Expertise'), _h('Gouv.'), _h('M.O.'), _h('Spéc.'),
-        _h('Statut\nrapport'), _h('Statut'), _h('Échéance\nrapport'), _h('Facture'),
+        _h('Rapport &\nFacture'), _h('Échéance\nrapport'),
     ]
 
     expertises = list(expertises)
     rows = [headers]
     for i, e in enumerate(expertises, 1):
+        rapport_cell = Table(
+            [[_st(e.rapport_status)], [_invoice_status(e)]],
+            colWidths=[4.5*cm],
+            style=TableStyle([
+                ('TOPPADDING', (0, 0), (-1, -1), 1),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ]),
+        )
         rows.append([
             Paragraph(str(i), CELL_C),
             Paragraph(e.bon_commande_number or '—', CELL_C),
@@ -391,23 +401,19 @@ def build_expertise_list_pdf(expertises):
             Paragraph(e.get_gouvernorat_display()[:12], CELL_S),
             Paragraph((e.maitre_ouvrage or '—')[:22], CELL_S),
             _spec(e),
-            _st(e.rapport_status),
-            Paragraph(e.get_rapport_status_display(), CELL_C),
+            rapport_cell,
             Paragraph(_date(e.invoice_due_date), CELL_C),
-            _invoice_status(e),
         ])
 
     col_widths = [
         0.7*cm,   # #
         1.5*cm,   # N°BC
-        7.0*cm,   # Expertise
+        8.5*cm,   # Expertise
         2.5*cm,   # Gouv.
-        4.0*cm,   # M.O.
+        4.5*cm,   # M.O.
         2.5*cm,   # Spéc.
-        2.5*cm,   # Statut dossier
-        2.5*cm,   # Complétion
-        2.5*cm,   # Échéance facture
-        2.5*cm,   # Facture
+        4.5*cm,   # Rapport & Facture
+        3.0*cm,   # Échéance rapport
     ]
 
     table = Table(rows, colWidths=col_widths, repeatRows=1)
@@ -422,6 +428,7 @@ def build_expertise_list_pdf(expertises):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ('LINEAFTER', (5, 0), (5, -1), 1.0, colors.HexColor('#0f3460')),
         ('LINEAFTER', (6, 0), (6, -1), 1.0, colors.HexColor('#0f3460')),
+        ('VALIGN',    (6, 1), (6, -1), 'TOP'),
     ]))
 
     story = [table]

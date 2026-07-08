@@ -86,9 +86,8 @@
               <th>Gouvernorat</th>
               <th>M.O.</th>
               <th class="text-center">Spéc.</th>
-              <th class="text-center">Statut rapport</th>
+              <th class="text-center">Rapport &amp; Facture</th>
               <th class="text-center">Échéance rapport</th>
-              <th class="text-center">Rapport</th>
               <th class="text-center border-start border-secondary">Alertes</th>
               <th class="text-end pe-3">Actions</th>
             </tr>
@@ -117,45 +116,39 @@
                 </div>
               </td>
               <td class="text-center">
-                <span class="badge-status status-{{ e.rapport_status }}">{{ e.get_rapport_status_display }}</span>
-              </td>
-              <td class="text-center small">
-                {% if e.invoice_due_date %}
-                  {% with days=e.invoice_days_remaining %}
-                    <div class="{% if days < 0 %}text-danger fw-bold{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
-                      {{ e.invoice_due_date|date:"d/m/Y" }}
-                    </div>
-                    {% if days is not None %}
-                      <div class="text-muted" style="font-size:.7rem;">
-                        {% if days < 0 %}Retard {{ days|cut:"-" }}j
-                        {% elif days == 0 %}Aujourd'hui
-                        {% else %}J-{{ days }}{% endif %}
-                      </div>
+                <div class="d-flex flex-column gap-1 align-items-center">
+                  <span class="badge-status status-{{ e.rapport_status }}">{{ e.get_rapport_status_display }}</span>
+                  {% with inv=e.get_invoice %}
+                    {% if inv and inv.is_complete %}
+                      <span class="badge bg-success"><i class="bi bi-check2-all"></i> Transmise</span>
+                    {% elif inv and inv.is_established %}
+                      <span class="badge bg-info text-dark">Établie</span>
+                    {% else %}
+                      {% with days=e.invoice_days_remaining %}
+                        {% if days < 0 %}
+                          <span class="badge bg-danger blink">RETARD facture</span>
+                        {% elif days <= 3 %}
+                          <span class="badge bg-danger blink">Facture J-{{ days }}</span>
+                        {% elif days <= 10 %}
+                          <span class="badge bg-warning text-dark">Facture J-{{ days }}</span>
+                        {% else %}
+                          <span class="badge bg-secondary">Facture à faire</span>
+                        {% endif %}
+                      {% endwith %}
                     {% endif %}
                   {% endwith %}
-                {% else %}
-                  <span class="text-muted">–</span>
-                {% endif %}
+                </div>
               </td>
-              <td class="text-center">
-                {% with inv=e.get_invoice %}
-                  {% if inv and inv.is_complete %}
-                    <span class="badge bg-success"><i class="bi bi-check2-all"></i> Transmise</span>
-                  {% elif inv and inv.is_established %}
-                    <span class="badge bg-info text-dark">Établie</span>
-                  {% else %}
-                    {% with days=e.invoice_days_remaining %}
-                      {% if days < 0 %}
-                        <span class="badge bg-danger blink">RETARD</span>
-                      {% elif days <= 3 %}
-                        <span class="badge bg-danger blink">J-{{ days }}</span>
-                      {% elif days <= 10 %}
-                        <span class="badge bg-warning text-dark">J-{{ days }}</span>
-                      {% else %}
-                        <span class="badge bg-info text-dark">À faire</span>
-                      {% endif %}
-                    {% endwith %}
-                  {% endif %}
+              <td class="text-center small">
+                {% with days=e.invoice_days_remaining %}
+                  <div class="{% if days < 0 %}text-danger fw-bold{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
+                    {{ e.invoice_due_date|date:"d/m/Y" }}
+                  </div>
+                  <div class="text-muted" style="font-size:.7rem;">
+                    {% if days < 0 %}Retard {{ days|cut:"-" }}j
+                    {% elif days == 0 %}Aujourd'hui
+                    {% else %}J-{{ days }}{% endif %}
+                  </div>
                 {% endwith %}
               </td>
               <td class="text-center border-start">
@@ -181,7 +174,7 @@
             </tr>
             {% empty %}
             <tr>
-              <td colspan="10" class="text-center text-muted py-5">
+              <td colspan="9" class="text-center text-muted py-5">
                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                 Aucune expertise trouvée.
                 <a href="{% url 'expertise_create' %}">Créer la première expertise</a>

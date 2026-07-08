@@ -216,19 +216,23 @@
             <div class="col-md-4">
               <div class="p-3 bg-light rounded-3">
                 <div class="text-muted small mb-1"><i class="bi bi-eye me-1"></i>Visites</div>
-                <div class="d-flex justify-content-between align-items-baseline">
-                  <span class="h5 mb-0 fw-bold">{{ project.completed_visits }} / {{ project.planned_visits }}</span>
-                  <span class="badge {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning text-dark{% endif %}">
-                    {{ project.visit_percentage|floatformat:0 }}%
-                  </span>
-                </div>
-                <div class="progress mt-2" style="height:8px; overflow:hidden;">
-                  <div class="progress-bar {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning{% endif %}"
-                       role="progressbar"
-                       style="width:{{ project.visit_percentage|floatformat:0 }}%"
-                       aria-valuenow="{{ project.visit_percentage|floatformat:0 }}"
-                       aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
+                {% if project.planned_visits == 0 %}
+                  <div class="h5 mb-0 fw-bold text-muted">F</div>
+                {% else %}
+                  <div class="d-flex justify-content-between align-items-baseline">
+                    <span class="h5 mb-0 fw-bold">{{ project.completed_visits }} / {{ project.planned_visits }}</span>
+                    <span class="badge {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning text-dark{% endif %}">
+                      {{ project.visit_percentage|floatformat:0 }}%
+                    </span>
+                  </div>
+                  <div class="progress mt-2" style="height:8px; overflow:hidden;">
+                    <div class="progress-bar {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning{% endif %}"
+                         role="progressbar"
+                         style="width:{{ project.visit_percentage|floatformat:0 }}%"
+                         aria-valuenow="{{ project.visit_percentage|floatformat:0 }}"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                {% endif %}
               </div>
             </div>
 
@@ -357,22 +361,25 @@
           <i class="bi bi-receipt me-2"></i><strong>Factures</strong>
         </div>
         <div class="card-body p-0">
-          {% for num in "123" %}
-            {% with inv=invoices|default_if_none:'' %}
-            {% endwith %}
-          {% endfor %}
-
-          {% for invoice_num, invoice_obj in invoices.items %}
-            <div class="p-3 border-bottom small">
+          {% for num, inv in invoice_list %}
+          <div class="p-3 border-bottom small d-flex justify-content-between align-items-start">
+            <div>
               <i class="bi bi-receipt me-1"></i>
-              <strong>Facture N°{{ invoice_num }}</strong>
-              {% if invoice_obj.establishment_date %}
-                – établie le <strong>{{ invoice_obj.establishment_date|date:"d/m/Y" }}</strong>
-              {% endif %}
-              {% if invoice_obj.transmission_date %}
-                et transmise le <strong>{{ invoice_obj.transmission_date|date:"d/m/Y" }}</strong>
+              <strong>Facture N°{{ num }}</strong>
+              {% if inv and inv.establishment_date %}
+                <span class="badge bg-success ms-1">Établie</span>
+                <div class="text-muted mt-1">Établie le {{ inv.establishment_date|date:"d/m/Y" }}</div>
+                {% if inv.transmission_date %}
+                  <div class="text-muted">Transmise le {{ inv.transmission_date|date:"d/m/Y" }}</div>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-secondary ms-1">Non établie</span>
               {% endif %}
             </div>
+            <a href="{% url 'invoice_edit' project.pk num %}" class="btn btn-outline-secondary btn-sm py-0">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </div>
           {% endfor %}
         </div>
       </div>
@@ -404,20 +411,24 @@
           <div class="mb-3">
             <div class="d-flex justify-content-between small mb-1">
               <span>Visites</span>
-              <span>{{ project.visit_percentage }}%</span>
+              {% if project.planned_visits == 0 %}
+                <span class="text-muted">F</span>
+              {% else %}
+                <span>{{ project.visit_percentage }}%</span>
+              {% endif %}
             </div>
+            {% if project.planned_visits > 0 %}
             <div class="progress" style="height:8px;">
               <div class="progress-bar {% if project.visit_percentage >= 100 %}bg-success{% elif project.visit_percentage >= 50 %}bg-info{% else %}bg-warning{% endif %}"
                    style="width:{{ project.visit_percentage }}%"></div>
             </div>
+            {% endif %}
           </div>
           <div>
             <div class="d-flex justify-content-between small mb-1">
               <span>Factures</span>
               <span>
-                {% if project.invoice1_established %}1{% else %}0{% endif %}/
-                {% if project.invoice2_established %}1{% else %}0{% endif %}/
-                {% if project.invoice3_established %}1{% else %}0{% endif %}
+                {% for num, inv in invoice_list %}{% if inv and inv.establishment_date %}1{% else %}0{% endif %}{% if not forloop.last %}/{% endif %}{% endfor %}
                 établies
               </span>
             </div>
