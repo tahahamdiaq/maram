@@ -72,10 +72,14 @@
     <!-- Statut du rapport -->
     <div class="card border-0 shadow-sm mb-3">
       <div class="card-header bg-dark text-white py-2">
-        <i class="bi bi-file-text me-2"></i><strong>Statut du rapport</strong>
+        <i class="bi bi-file-text me-2"></i><strong>Rapport</strong>
       </div>
       <div class="card-body">
-        <div class="col-md-4">{{ form.rapport_status|as_crispy_field }}</div>
+        <div class="row g-3">
+          <div class="col-md-4">{{ form.rapport_status|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.rapport_date|as_crispy_field }}</div>
+          <div class="col-md-4">{{ form.rapport_final_date|as_crispy_field }}</div>
+        </div>
       </div>
     </div>
 

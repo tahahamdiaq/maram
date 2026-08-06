@@ -241,12 +241,17 @@ def build_expertise_pdf(expertise):
 
     # ── Rapport ───────────────────────────────────────────────────────────────
     story.append(Paragraph('Rapport', _H2))
-    story.append(Table([
+    rapport_rows = [
         ['Champ', 'Valeur'],
-        _row('Statut du rapport',       expertise.get_rapport_status_display()),
-        _row('Échéance rapport (+60j)', _date(expertise.invoice_due_date)),
-        _row('Jours restants',          f'{expertise.invoice_days_remaining} j.' if expertise.invoice_days_remaining is not None else '–'),
-    ], colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
+        _row('Statut du rapport',        expertise.get_rapport_status_display()),
+        _row('Échéance rapport (+30j)',   _date(expertise.rapport_due_date)),
+        _row('Jours restants rapport',   f'{expertise.rapport_days_remaining} j.'),
+        _row('Date rapport final',        _date(expertise.rapport_final_date)),
+    ]
+    if expertise.facture_due_date:
+        rapport_rows.append(_row('Échéance facture (= date rapport final)', _date(expertise.facture_due_date)))
+        rapport_rows.append(_row('Jours restants facture', f'{expertise.facture_days_remaining} j.'))
+    story.append(Table(rapport_rows, colWidths=[5*cm, 12*cm], style=_TABLE_STYLE))
 
     # ── Facture ───────────────────────────────────────────────────────────────
     story.append(Paragraph('Facture', _H2))
@@ -358,42 +363,39 @@ def build_expertise_list_pdf(expertises):
         if e.has_securite_incendie: parts.append('SI')
         return Paragraph(' / '.join(parts) if parts else '—', CELL_C)
 
-    def _invoice_status(e):
+    def _facture_status(e):
         inv = e.get_invoice
         if inv and inv.is_complete:
             return Paragraph('<font color="#198754"><b>Transmise</b></font>', CELL_C)
         if inv and inv.is_established:
             return Paragraph('<font color="#0066cc"><b>Établie</b></font>', CELL_C)
-        days = e.invoice_days_remaining
-        if days is None:
-            return Paragraph('<font color="#aaaaaa">—</font>', CELL_C)
+        if not e.rapport_final_date:
+            return Paragraph('<font color="#aaaaaa">Après rapport final</font>', CELL_C)
+        days = e.facture_days_remaining
         if days < 0:
             return Paragraph(f'<font color="#dc3545"><b>RETARD {abs(days)}j</b></font>', CELL_C)
+        if days <= 3:
+            return Paragraph(f'<font color="#dc3545"><b>J-{days}</b></font>', CELL_C)
         if days <= 10:
             return Paragraph(f'<font color="#fd7e14"><b>J-{days}</b></font>', CELL_C)
-        return Paragraph('<font color="#0066cc">À faire</font>', CELL_C)
+        return Paragraph('<font color="#0066cc">À établir</font>', CELL_C)
+
+    def _rapport_final(e):
+        if e.rapport_final_date:
+            return Paragraph(f'<font color="#198754"><b>{_date(e.rapport_final_date)}</b></font>', CELL_C)
+        return Paragraph('<font color="#aaaaaa">—</font>', CELL_C)
 
     def _h(text):
         return Paragraph(text, HDR_S)
 
     headers = [
         _h('#'), _h('N°BC'), _h('Expertise'), _h('Gouv.'), _h('M.O.'), _h('Spéc.'),
-        _h('Rapport &\nFacture'), _h('Échéance\nrapport'),
+        _h('Rapport'), _h('Rapport\nfinal'), _h('Facture'), _h('Échéance\nrapport (30j)'),
     ]
 
     expertises = list(expertises)
     rows = [headers]
     for i, e in enumerate(expertises, 1):
-        rapport_cell = Table(
-            [[_st(e.rapport_status)], [_invoice_status(e)]],
-            colWidths=[4.5*cm],
-            style=TableStyle([
-                ('TOPPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ]),
-        )
         rows.append([
             Paragraph(str(i), CELL_C),
             Paragraph(e.bon_commande_number or '—', CELL_C),
@@ -401,19 +403,23 @@ def build_expertise_list_pdf(expertises):
             Paragraph(e.get_gouvernorat_display()[:12], CELL_S),
             Paragraph((e.maitre_ouvrage or '—')[:22], CELL_S),
             _spec(e),
-            rapport_cell,
-            Paragraph(_date(e.invoice_due_date), CELL_C),
+            Paragraph(e.get_rapport_status_display(), CELL_C),
+            _rapport_final(e),
+            _facture_status(e),
+            Paragraph(_date(e.rapport_due_date), CELL_C),
         ])
 
     col_widths = [
         0.7*cm,   # #
         1.5*cm,   # N°BC
-        8.5*cm,   # Expertise
-        2.5*cm,   # Gouv.
-        4.5*cm,   # M.O.
-        2.5*cm,   # Spéc.
-        4.5*cm,   # Rapport & Facture
-        3.0*cm,   # Échéance rapport
+        7.5*cm,   # Expertise
+        2.0*cm,   # Gouv.
+        4.0*cm,   # M.O.
+        2.0*cm,   # Spéc.
+        2.5*cm,   # Rapport
+        2.5*cm,   # Rapport final
+        2.5*cm,   # Facture
+        2.5*cm,   # Échéance rapport
     ]
 
     table = Table(rows, colWidths=col_widths, repeatRows=1)
@@ -427,8 +433,7 @@ def build_expertise_list_pdf(expertises):
         ('TOPPADDING',    (0, 0), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ('LINEAFTER', (5, 0), (5, -1), 1.0, colors.HexColor('#0f3460')),
-        ('LINEAFTER', (6, 0), (6, -1), 1.0, colors.HexColor('#0f3460')),
-        ('VALIGN',    (6, 1), (6, -1), 'TOP'),
+        ('LINEAFTER', (8, 0), (8, -1), 1.0, colors.HexColor('#0f3460')),
     ]))
 
     story = [table]
@@ -491,9 +496,9 @@ def build_project_list_pdf(projects):
 
     headers = [
         _h('#'), _h('N°BC'), _h('Projet'), _h('Gouv.'), _h('M.O.'), _h('Spéc.'),
-        _h('DAO\nSTR'), _h('DAO\nELEC'), _h('DAO\nFL'), _h('DAO\nSI'),
+        _h('DAO\nSTR'), _h('DAO\nELEC'), _h('DAO\nFL'), _h('DAO\nSI'), _h('DAO\nVRD'),
         _h('D0'),
-        _h('EXE\nSTR'), _h('EXE\nELEC'), _h('EXE\nFL'), _h('EXE\nSI'),
+        _h('EXE\nVRD'), _h('EXE\nELEC'), _h('EXE\nFL'), _h('EXE\nSI'),
         _h('Vis.'), _h('D6'), _h('RPRO'), _h('RDEF'),
     ]
 
@@ -511,8 +516,9 @@ def build_project_list_pdf(projects):
             _st(p.has_electricite,        p.dao_electricite),
             _st(p.has_fluide,             p.dao_fluide),
             _st(p.has_securite_incendie,  p.dao_securite_incendie),
+            _st(p.has_vrd,                p.dao_vrd),
             _yn(p.d0_done),
-            _st(p.has_structure,          p.exe_structure),
+            _st(p.has_vrd,                p.exe_vrd),
             _st(p.has_electricite,        p.exe_electricite),
             _st(p.has_fluide,             p.exe_fluide),
             _st(p.has_securite_incendie,  p.exe_securite_incendie),
@@ -525,19 +531,20 @@ def build_project_list_pdf(projects):
     col_widths = [
         0.7*cm,  # #
         1.5*cm,  # N°BC
-        5.5*cm,  # Projet
-        2.5*cm,  # Gouv.
-        3.0*cm,  # M.O.
-        2.0*cm,  # Spéc.
-        2.0*cm,  # DAO STR
-        2.0*cm,  # DAO ELEC
-        2.0*cm,  # DAO FL
-        2.0*cm,  # DAO SI
+        5.0*cm,  # Projet
+        2.0*cm,  # Gouv.
+        2.5*cm,  # M.O.
+        1.8*cm,  # Spéc.
+        1.8*cm,  # DAO STR
+        1.8*cm,  # DAO ELEC
+        1.8*cm,  # DAO FL
+        1.8*cm,  # DAO SI
+        1.8*cm,  # DAO VRD
         1.0*cm,  # D0
-        2.0*cm,  # EXE STR
-        2.0*cm,  # EXE ELEC
-        2.0*cm,  # EXE FL
-        2.0*cm,  # EXE SI
+        1.8*cm,  # EXE VRD
+        1.8*cm,  # EXE ELEC
+        1.8*cm,  # EXE FL
+        1.8*cm,  # EXE SI
         1.3*cm,  # Vis.
         1.0*cm,  # D6
         1.0*cm,  # RPRO
@@ -555,11 +562,11 @@ def build_project_list_pdf(projects):
         ('TOPPADDING',    (0, 0), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         # Group separators
-        ('LINEAFTER', (5,  0), (5,  -1), 1.0, colors.HexColor('#0f3460')),
-        ('LINEAFTER', (9,  0), (9,  -1), 1.0, colors.HexColor('#0f3460')),
-        ('LINEAFTER', (10, 0), (10, -1), 1.0, colors.HexColor('#0f3460')),
-        ('LINEAFTER', (14, 0), (14, -1), 1.0, colors.HexColor('#0f3460')),
-        ('LINEAFTER', (15, 0), (15, -1), 1.0, colors.HexColor('#0f3460')),
+        ('LINEAFTER', (5,  0), (5,  -1), 1.0, colors.HexColor('#0f3460')),  # after Spéc.
+        ('LINEAFTER', (10, 0), (10, -1), 1.0, colors.HexColor('#0f3460')),  # after DAO VRD
+        ('LINEAFTER', (11, 0), (11, -1), 1.0, colors.HexColor('#0f3460')),  # after D0
+        ('LINEAFTER', (15, 0), (15, -1), 1.0, colors.HexColor('#0f3460')),  # after EXE SI
+        ('LINEAFTER', (16, 0), (16, -1), 1.0, colors.HexColor('#0f3460')),  # after Vis.
     ]))
 
     story = [table]

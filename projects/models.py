@@ -49,7 +49,7 @@ DOSSIER_STATUS_CHOICES = [
 class Engineer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=200, verbose_name='Nom complet')
-    email = models.EmailField(verbose_name='Email')
+    email = models.EmailField(verbose_name='Email', blank=True)
     specialties = models.CharField(max_length=200, blank=True, verbose_name='Spécialités')
 
     class Meta:
@@ -74,6 +74,7 @@ class Project(models.Model):
     has_electricite = models.BooleanField(default=False, verbose_name='Électricité')
     has_fluide = models.BooleanField(default=False, verbose_name='Fluide')
     has_securite_incendie = models.BooleanField(default=False, verbose_name='Sécurité incendie')
+    has_vrd = models.BooleanField(default=False, verbose_name='VRD')
 
     # --- Ingénieurs ---
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
@@ -99,6 +100,10 @@ class Project(models.Model):
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
         verbose_name='DAO Sécurité incendie'
     )
+    dao_vrd = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='DAO VRD'
+    )
 
     # --- DAO dates de réception / décision par spécialité ---
     dao_structure_received_date = models.DateField(null=True, blank=True, verbose_name='DAO STR – Date réception')
@@ -109,6 +114,8 @@ class Project(models.Model):
     dao_fluide_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO FL – Date décision')
     dao_securite_incendie_received_date = models.DateField(null=True, blank=True, verbose_name='DAO SI – Date réception')
     dao_securite_incendie_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO SI – Date décision')
+    dao_vrd_received_date = models.DateField(null=True, blank=True, verbose_name='DAO VRD – Date réception')
+    dao_vrd_decision_date = models.DateField(null=True, blank=True, verbose_name='DAO VRD – Date décision')
 
     dao_completed_date = models.DateField(
         null=True, blank=True,
@@ -136,6 +143,10 @@ class Project(models.Model):
         max_length=20, choices=STATUS_CHOICES, default='non_prevu',
         verbose_name='EXE Sécurité incendie'
     )
+    exe_vrd = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='non_prevu',
+        verbose_name='EXE VRD'
+    )
 
     # --- EXE dates de réception / décision par spécialité ---
     exe_structure_received_date = models.DateField(null=True, blank=True, verbose_name='EXE STR – Date réception')
@@ -146,6 +157,8 @@ class Project(models.Model):
     exe_fluide_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE FL – Date décision')
     exe_securite_incendie_received_date = models.DateField(null=True, blank=True, verbose_name='EXE SI – Date réception')
     exe_securite_incendie_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE SI – Date décision')
+    exe_vrd_received_date = models.DateField(null=True, blank=True, verbose_name='EXE VRD – Date réception')
+    exe_vrd_decision_date = models.DateField(null=True, blank=True, verbose_name='EXE VRD – Date décision')
 
     exe_started_date = models.DateField(null=True, blank=True, verbose_name='Date début EXE')
 
@@ -183,7 +196,7 @@ class Project(models.Model):
 
     @property
     def dao_completed(self):
-        if not (self.has_structure or self.has_electricite or self.has_fluide or self.has_securite_incendie):
+        if not (self.has_structure or self.has_electricite or self.has_fluide or self.has_securite_incendie or self.has_vrd):
             return False
         if self.has_structure and self.dao_structure != 'approuve':
             return False
@@ -193,11 +206,13 @@ class Project(models.Model):
             return False
         if self.has_securite_incendie and self.dao_securite_incendie != 'approuve':
             return False
+        if self.has_vrd and self.dao_vrd != 'approuve':
+            return False
         return True
 
     @property
     def exe_completed(self):
-        if not (self.has_structure or self.has_electricite or self.has_fluide or self.has_securite_incendie):
+        if not (self.has_structure or self.has_electricite or self.has_fluide or self.has_securite_incendie or self.has_vrd):
             return False
         if self.has_structure and self.exe_structure != 'approuve':
             return False
@@ -206,6 +221,8 @@ class Project(models.Model):
         if self.has_fluide and self.exe_fluide != 'approuve':
             return False
         if self.has_securite_incendie and self.exe_securite_incendie != 'approuve':
+            return False
+        if self.has_vrd and self.exe_vrd != 'approuve':
             return False
         return True
 
@@ -274,6 +291,8 @@ class Project(models.Model):
             parts.append('FL')
         if self.has_securite_incendie:
             parts.append('SI')
+        if self.has_vrd:
+            parts.append('VRD')
         return ' / '.join(parts) if parts else '–'
 
     def save(self, *args, **kwargs):
@@ -284,6 +303,7 @@ class Project(models.Model):
                     self.dao_electricite_decision_date if self.has_electricite else None,
                     self.dao_fluide_decision_date if self.has_fluide else None,
                     self.dao_securite_incendie_decision_date if self.has_securite_incendie else None,
+                    self.dao_vrd_decision_date if self.has_vrd else None,
                 ] if d is not None
             ]
             self.dao_completed_date = max(decision_dates) if decision_dates else date.today()
@@ -342,12 +362,18 @@ class Expertise(models.Model):
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
 
     RAPPORT_STATUS_CHOICES = [
-        ('non_effectue', 'Non encore effectué'),
         ('en_cours', 'En cours'),
+        ('cloturee', 'Clôturée'),
     ]
     rapport_status = models.CharField(
-        max_length=20, choices=RAPPORT_STATUS_CHOICES, default='non_effectue',
-        verbose_name='Statut du rapport'
+        max_length=20, choices=RAPPORT_STATUS_CHOICES, default='en_cours',
+        verbose_name='Statut expertise'
+    )
+    rapport_date = models.DateField(
+        null=True, blank=True, verbose_name='Date rapport'
+    )
+    rapport_final_date = models.DateField(
+        null=True, blank=True, verbose_name='Date rapport final'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -366,15 +392,30 @@ class Expertise(models.Model):
         return f"{self.bon_commande_number} – {self.name}"
 
     @property
+    def rapport_due_date(self):
+        return self.bon_commande_date + timedelta(days=30)
+
+    @property
+    def rapport_days_remaining(self):
+        return (self.rapport_due_date - date.today()).days
+
+    @property
+    def facture_due_date(self):
+        return self.rapport_final_date or None
+
+    @property
+    def facture_days_remaining(self):
+        due = self.facture_due_date
+        return (due - date.today()).days if due else None
+
+    # kept for backward-compat in templates that still reference the old name
+    @property
     def invoice_due_date(self):
-        return self.bon_commande_date + timedelta(days=60)
+        return self.rapport_due_date
 
     @property
     def invoice_days_remaining(self):
-        due = self.invoice_due_date
-        if due:
-            return (due - date.today()).days
-        return None
+        return self.rapport_days_remaining
 
     @property
     def get_invoice(self):

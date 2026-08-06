@@ -62,6 +62,9 @@
               <div class="form-check">
                 {{ form.has_securite_incendie }} <label class="form-check-label" for="{{ form.has_securite_incendie.id_for_label }}">Sécurité incendie</label>
               </div>
+              <div class="form-check">
+                {{ form.has_vrd }} <label class="form-check-label" for="{{ form.has_vrd.id_for_label }}">VRD</label>
+              </div>
             </div>
           </div>
           <div class="col-md-8">{{ form.engineers|as_crispy_field }}</div>
@@ -252,6 +255,7 @@ const specMap = {
   electricite:       '#id_has_electricite',
   fluide:            '#id_has_fluide',
   securite_incendie: '#id_has_securite_incendie',
+  vrd:               '#id_has_vrd',
 };
 function toggleSpecialtyFields() {
   for (const [spec, checkboxId] of Object.entries(specMap)) {
@@ -260,7 +264,7 @@ function toggleSpecialtyFields() {
     $(`tr.spec-row[data-spec="${spec}"] .field-inactive`).toggle(!active);
   }
 }
-$('#id_has_structure, #id_has_electricite, #id_has_fluide, #id_has_securite_incendie').on('change', toggleSpecialtyFields);
+$('#id_has_structure, #id_has_electricite, #id_has_fluide, #id_has_securite_incendie, #id_has_vrd').on('change', toggleSpecialtyFields);
 toggleSpecialtyFields();
 </script>
 {% endblock %}

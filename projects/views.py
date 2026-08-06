@@ -118,28 +118,36 @@ def project_detail(request, pk):
 
 # ─── Create / Edit Project ────────────────────────────────────────────────────
 
-_SPEC_META = [
-    ('structure',         'STR',  'spec-str'),
-    ('electricite',       'ELEC', 'spec-elec'),
-    ('fluide',            'FL',   'spec-fl'),
-    ('securite_incendie', 'SI',   'spec-si'),
+_DAO_SPEC_META = [
+    ('structure',         'Structure',        'spec-str'),
+    ('electricite',       'Électricité',      'spec-elec'),
+    ('fluide',            'Fluide',           'spec-fl'),
+    ('securite_incendie', 'Sécurité incendie','spec-si'),
+    ('vrd',               'VRD',              'spec-vrd'),
+]
+
+_EXE_SPEC_META = [
+    ('vrd',               'VRD',              'spec-vrd'),
+    ('electricite',       'Électricité',      'spec-elec'),
+    ('fluide',            'Fluide',           'spec-fl'),
+    ('securite_incendie', 'Sécurité incendie','spec-si'),
 ]
 
 def _project_form_context(form):
-    dao_specs, exe_specs = [], []
-    for key, label, css in _SPEC_META:
-        dao_specs.append((
-            key, label, css,
-            form[f'dao_{key}'],
-            form[f'dao_{key}_received_date'],
-            form[f'dao_{key}_decision_date'],
-        ))
-        exe_specs.append((
-            key, label, css,
-            form[f'exe_{key}'],
-            form[f'exe_{key}_received_date'],
-            form[f'exe_{key}_decision_date'],
-        ))
+    dao_specs = [
+        (key, label, css,
+         form[f'dao_{key}'],
+         form[f'dao_{key}_received_date'],
+         form[f'dao_{key}_decision_date'])
+        for key, label, css in _DAO_SPEC_META
+    ]
+    exe_specs = [
+        (key, label, css,
+         form[f'exe_{key}'],
+         form[f'exe_{key}_received_date'],
+         form[f'exe_{key}_decision_date'])
+        for key, label, css in _EXE_SPEC_META
+    ]
     return {'dao_specs': dao_specs, 'exe_specs': exe_specs}
 
 
@@ -167,7 +175,8 @@ _DOSSIER_FIELDS = [
     ('dao_electricite',       'DAO Électricité'),
     ('dao_fluide',            'DAO Fluide'),
     ('dao_securite_incendie', 'DAO Sécurité incendie'),
-    ('exe_structure',         'EXE Structure'),
+    ('dao_vrd',               'DAO VRD'),
+    ('exe_vrd',               'EXE VRD'),
     ('exe_electricite',       'EXE Électricité'),
     ('exe_fluide',            'EXE Fluide'),
     ('exe_securite_incendie', 'EXE Sécurité incendie'),
@@ -521,14 +530,72 @@ def expertise_delete(request, pk):
     return render(request, 'projects/expertise_confirm_delete.html', {'expertise': expertise})
 
 
+def _fmt_date(d):
+    return d.strftime('%d/%m/%Y') if d else '–'
+
+
+def _log_expertise_changes(expertise, changes, user):
+    """Create one ExpertiseObservation per changed field."""
+    today = date.today()
+    for label, old_val, new_val in changes:
+        if old_val != new_val:
+            ExpertiseObservation.objects.create(
+                expertise=expertise,
+                date=today,
+                text=f"{label} : {old_val} → {new_val}",
+                is_auto=True,
+                created_by=user,
+            )
+
+
+@login_required
+@require_POST
+def expertise_rapport_update(request, pk):
+    expertise = get_object_or_404(Expertise, pk=pk)
+    rapport_status = request.POST.get('rapport_status')
+    rapport_date = request.POST.get('rapport_date') or None
+    rapport_final_date = request.POST.get('rapport_final_date') or None
+    valid_statuses = [c[0] for c in Expertise.RAPPORT_STATUS_CHOICES]
+    if rapport_status in valid_statuses:
+        status_labels = dict(Expertise.RAPPORT_STATUS_CHOICES)
+        changes = [
+            ('Statut expertise',
+             status_labels.get(expertise.rapport_status, expertise.rapport_status),
+             status_labels.get(rapport_status, rapport_status)),
+            ('Date rapport', _fmt_date(expertise.rapport_date), _fmt_date(
+                date.fromisoformat(rapport_date) if rapport_date else None)),
+            ('Date rapport final', _fmt_date(expertise.rapport_final_date), _fmt_date(
+                date.fromisoformat(rapport_final_date) if rapport_final_date else None)),
+        ]
+        expertise.rapport_status = rapport_status
+        expertise.rapport_date = rapport_date
+        expertise.rapport_final_date = rapport_final_date
+        expertise.save()
+        _log_expertise_changes(expertise, changes, request.user)
+        check_expertise_notifications(expertise)
+        messages.success(request, 'Statut du rapport mis à jour.')
+    return redirect('expertise_detail', pk=pk)
+
+
 @login_required
 def expertise_invoice_edit(request, expertise_pk):
     expertise = get_object_or_404(Expertise, pk=expertise_pk)
     invoice, _ = ExpertiseInvoice.objects.get_or_create(expertise=expertise)
     if request.method == 'POST':
+        old_establishment = invoice.establishment_date
+        old_transmission = invoice.transmission_date
+        old_notes = invoice.notes
         form = ExpertiseInvoiceForm(request.POST, instance=invoice)
         if form.is_valid():
             form.save()
+            changes = [
+                ('Facture – date établissement',
+                 _fmt_date(old_establishment), _fmt_date(invoice.establishment_date)),
+                ('Facture – date transmission',
+                 _fmt_date(old_transmission), _fmt_date(invoice.transmission_date)),
+                ('Facture – notes', old_notes or '–', invoice.notes or '–'),
+            ]
+            _log_expertise_changes(expertise, changes, request.user)
             check_expertise_notifications(expertise)
             messages.success(request, 'Facture mise à jour.')
             return redirect('expertise_detail', pk=expertise_pk)

@@ -102,38 +102,70 @@
       <!-- Statut du rapport -->
       <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-dark text-white py-2">
-          <i class="bi bi-file-text me-2"></i><strong>Statut du rapport</strong>
+          <i class="bi bi-file-text me-2"></i><strong>Rapport</strong>
         </div>
         <div class="card-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="text-muted small">Statut</label>
+          <!-- Current state -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">
+              <label class="text-muted small">Statut expertise</label>
               <div>
-                <span class="badge-status status-{{ expertise.rapport_status }} fs-6">
+                <span class="badge-status status-{{ expertise.rapport_status }}">
                   {{ expertise.get_rapport_status_display }}
                 </span>
               </div>
             </div>
-            <div class="col-md-4">
-              <label class="text-muted small">Date réception BC</label>
-              <div class="fw-semibold">{{ expertise.bon_commande_date|date:"d/m/Y" }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="text-muted small">Échéance rapport (+60j)</label>
-              <div>
-                {% with days=expertise.invoice_days_remaining %}
-                  <span class="fw-semibold {% if days < 0 %}text-danger{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
-                    {{ expertise.invoice_due_date|date:"d/m/Y" }}
-                  </span>
-                  <div class="text-muted small">
-                    {% if days < 0 %}Retard de {{ days|cut:"-" }} jour(s)
+            <div class="col-md-3">
+              <label class="text-muted small">Date rapport</label>
+              {% if expertise.rapport_date %}
+                <div><span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ expertise.rapport_date|date:"d/m/Y" }}</span></div>
+              {% else %}
+                {% with days=expertise.rapport_days_remaining %}
+                  <div class="small {% if days < 0 %}text-danger fw-bold{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
+                    {% if days < 0 %}Retard {{ days|cut:"-" }}j (échéance {{ expertise.rapport_due_date|date:"d/m/Y" }})
                     {% elif days == 0 %}Échéance aujourd'hui
-                    {% else %}{{ days }} jour(s) restants{% endif %}
+                    {% else %}J-{{ days }} ({{ expertise.rapport_due_date|date:"d/m/Y" }}){% endif %}
                   </div>
                 {% endwith %}
-              </div>
+              {% endif %}
+            </div>
+            <div class="col-md-3">
+              <label class="text-muted small">Date rapport final</label>
+              {% if expertise.rapport_final_date %}
+                <div><span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ expertise.rapport_final_date|date:"d/m/Y" }}</span></div>
+              {% else %}
+                <div class="text-muted small">—</div>
+              {% endif %}
             </div>
           </div>
+          <!-- Inline update form -->
+          <hr class="my-2">
+          <form method="post" action="{% url 'expertise_rapport_update' expertise.pk %}" class="row g-2 align-items-end">
+            {% csrf_token %}
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Statut expertise</label>
+              <select name="rapport_status" class="form-select form-select-sm">
+                {% for val, lbl in expertise.RAPPORT_STATUS_CHOICES %}
+                  <option value="{{ val }}" {% if expertise.rapport_status == val %}selected{% endif %}>{{ lbl }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Date rapport</label>
+              <input type="date" name="rapport_date" class="form-control form-control-sm"
+                     value="{{ expertise.rapport_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold mb-1">Date rapport final</label>
+              <input type="date" name="rapport_final_date" class="form-control form-control-sm"
+                     value="{{ expertise.rapport_final_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-save me-1"></i>Enregistrer
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -189,70 +221,42 @@
     <!-- Right Column -->
     <div class="col-lg-4">
 
-      <!-- Rapport -->
+      <!-- Facture -->
       <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-dark text-white py-2">
-          <i class="bi bi-file-text me-2"></i><strong>Rapport</strong>
+        <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-receipt me-2"></i><strong>Facture</strong></span>
+          <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-light btn-sm py-0">
+            <i class="bi bi-pencil"></i>
+          </a>
         </div>
         <div class="card-body">
-          {% if invoice %}
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-file-text me-1"></i>Rapport expertise
-                {% if invoice.is_complete %}
-                  <span class="badge bg-success ms-1 small">Complète</span>
-                {% elif invoice.is_established %}
-                  <span class="badge bg-info text-dark ms-1 small">Établie</span>
-                {% else %}
-                  <span class="badge bg-warning text-dark ms-1 small">À établir</span>
-                {% endif %}
-              </h6>
-              <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-secondary btn-sm py-0">
-                <i class="bi bi-pencil"></i>
-              </a>
+          {% if not expertise.rapport_final_date %}
+            <div class="text-muted small">
+              <i class="bi bi-hourglass me-1"></i>En attente du rapport final.
             </div>
-            {% if invoice.establishment_date %}
-              <div class="small"><span class="text-muted">Établie :</span> <strong>{{ invoice.establishment_date|date:"d/m/Y" }}</strong></div>
-            {% else %}
-              <div class="small text-muted">Non établie</div>
-            {% endif %}
-            {% if invoice.transmission_date %}
-              <div class="small"><span class="text-muted">Transmise :</span> <strong>{{ invoice.transmission_date|date:"d/m/Y" }}</strong></div>
-            {% else %}
-              <div class="small text-muted">Non transmise</div>
-            {% endif %}
-            {% if invoice.notes %}
-              <div class="small text-muted mt-1">{{ invoice.notes }}</div>
-            {% endif %}
-
-            {% if not invoice.is_complete %}
-              {% with days=expertise.invoice_days_remaining %}
-                {% if days is not None %}
-                  <div class="mt-2 p-2 rounded-2 {% if days < 0 %}bg-danger text-white{% elif days <= 3 %}bg-danger text-white{% elif days <= 10 %}bg-warning{% else %}bg-light{% endif %}">
-                    <i class="bi bi-clock me-1"></i>
-                    {% if days < 0 %}
-                      <strong>En retard de {{ days|cut:"-" }} jour(s)</strong>
-                    {% elif days == 0 %}
-                      <strong>Échéance aujourd'hui !</strong>
-                    {% else %}
-                      <strong>{{ days }} jour(s)</strong> restants
-                    {% endif %}
-                    <div class="small">Échéance : {{ expertise.invoice_due_date|date:"d/m/Y" }}</div>
-                  </div>
-                {% endif %}
-              {% endwith %}
-            {% endif %}
-
-            {% if invoice.is_complete %}
-              <div class="mt-2 p-2 rounded-2 bg-success bg-opacity-10 border border-success small">
-                <i class="bi bi-check-circle-fill text-success me-1"></i>
-                Rapport établi et transmis – aucune alerte active.
-              </div>
-            {% endif %}
+          {% elif invoice and invoice.is_complete %}
+            <div class="p-2 rounded-2 bg-success bg-opacity-10 border border-success small mb-2">
+              <i class="bi bi-check-circle-fill text-success me-1"></i>Facture établie et transmise.
+            </div>
+            <div class="small"><span class="text-muted">Établie :</span> <strong>{{ invoice.establishment_date|date:"d/m/Y" }}</strong></div>
+            <div class="small"><span class="text-muted">Transmise :</span> <strong>{{ invoice.transmission_date|date:"d/m/Y" }}</strong></div>
+            {% if invoice.notes %}<div class="small text-muted mt-1">{{ invoice.notes }}</div>{% endif %}
           {% else %}
-            <div class="text-muted small">Aucun rapport.</div>
-            <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-primary btn-sm mt-2">
-              <i class="bi bi-plus me-1"></i>Saisir le rapport
+            <div class="p-2 rounded-2 bg-warning bg-opacity-25 small mb-2">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              Rapport final déposé le <strong>{{ expertise.rapport_final_date|date:"d/m/Y" }}</strong> – facture à établir.
+            </div>
+            {% if invoice %}
+              {% if invoice.establishment_date %}
+                <div class="small"><span class="text-muted">Établie :</span> <strong>{{ invoice.establishment_date|date:"d/m/Y" }}</strong></div>
+                <div class="small text-muted">Non encore transmise</div>
+              {% else %}
+                <div class="small text-muted">Non établie</div>
+              {% endif %}
+              {% if invoice.notes %}<div class="small text-muted mt-1">{{ invoice.notes }}</div>{% endif %}
+            {% endif %}
+            <a href="{% url 'expertise_invoice_edit' expertise.pk %}" class="btn btn-outline-primary btn-sm mt-2 w-100">
+              <i class="bi bi-pencil me-1"></i>Saisir la facture
             </a>
           {% endif %}
         </div>

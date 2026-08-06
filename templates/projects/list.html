@@ -135,7 +135,7 @@
               <th class="text-center">FL</th>
               <th class="text-center">SI</th>
               <th class="text-center border-start border-secondary"></th>
-              <th class="text-center border-start border-secondary">STR</th>
+              <th class="text-center border-start border-secondary">VRD</th>
               <th class="text-center">ELEC</th>
               <th class="text-center">FL</th>
               <th class="text-center">SI</th>
@@ -172,6 +172,7 @@
                   {% if p.has_electricite %}<span class="spec-badge spec-elec">ELEC</span>{% endif %}
                   {% if p.has_fluide %}<span class="spec-badge spec-fl">FL</span>{% endif %}
                   {% if p.has_securite_incendie %}<span class="spec-badge spec-si">SI</span>{% endif %}
+                  {% if p.has_vrd %}<span class="spec-badge spec-vrd">VRD</span>{% endif %}
                 </div>
               </td>
 
@@ -208,8 +209,8 @@
 
               <!-- EXE -->
               <td class="text-center border-start">
-                {% if p.has_structure %}
-                  <span class="badge-status status-{{ p.exe_structure }}">{{ p.get_exe_structure_display }}</span>
+                {% if p.has_vrd %}
+                  <span class="badge-status status-{{ p.exe_vrd }}">{{ p.get_exe_vrd_display }}</span>
                 {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
               <td class="text-center">

@@ -32,6 +32,7 @@ urlpatterns = [
     path('expertises/<int:pk>/supprimer/', views.expertise_delete, name='expertise_delete'),
     path('expertises/export-pdf/', views.expertise_list_export_pdf, name='expertise_list_export_pdf'),
     path('expertises/<int:pk>/export-pdf/', views.expertise_export_pdf, name='expertise_export_pdf'),
+    path('expertises/<int:pk>/rapport/update/', views.expertise_rapport_update, name='expertise_rapport_update'),
     path('expertises/<int:expertise_pk>/facture/', views.expertise_invoice_edit, name='expertise_invoice_edit'),
     path('expertises/<int:expertise_pk>/observations/ajouter/', views.expertise_observation_add, name='expertise_observation_add'),
     path('expertises/observations/<int:pk>/supprimer/', views.expertise_observation_delete, name='expertise_observation_delete'),

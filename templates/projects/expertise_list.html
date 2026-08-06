@@ -82,12 +82,16 @@
           <thead class="table-dark">
             <tr>
               <th class="ps-3" style="width:40px;">#</th>
-              <th>Expertise / N°BC</th>
+              <th>Expertise</th>
+              <th>N°BC</th>
+              <th>Statut</th>
               <th>Gouvernorat</th>
               <th>M.O.</th>
               <th class="text-center">Spéc.</th>
-              <th class="text-center">Rapport &amp; Facture</th>
-              <th class="text-center">Échéance rapport</th>
+              <th class="text-center">Rapport</th>
+              <th class="text-center">Rapport final</th>
+              <th class="text-center">Facture</th>
+              <th class="text-center">Échéance</th>
               <th class="text-center border-start border-secondary">Alertes</th>
               <th class="text-end pe-3">Actions</th>
             </tr>
@@ -100,10 +104,15 @@
                 <a href="{% url 'expertise_detail' e.pk %}" class="fw-semibold text-dark text-decoration-none" title="{{ e.name }}">
                   {{ e.name|truncatechars:35 }}
                 </a>
-                <div class="text-muted" style="font-size:.75rem;">{{ e.bon_commande_number }}</div>
-                {% for eng in e.engineers.all %}
-                  <span class="badge bg-light text-dark border" style="font-size:.65rem;">{{ eng.name }}</span>
-                {% endfor %}
+                <div>
+                  {% for eng in e.engineers.all %}
+                    <span class="badge bg-light text-dark border" style="font-size:.65rem;">{{ eng.name }}</span>
+                  {% endfor %}
+                </div>
+              </td>
+              <td class="small text-nowrap">{{ e.bon_commande_number }}</td>
+              <td class="text-center">
+                <span class="badge-status status-{{ e.rapport_status }}">{{ e.get_rapport_status_display }}</span>
               </td>
               <td class="small">{{ e.get_gouvernorat_display }}</td>
               <td class="small">{{ e.maitre_ouvrage|truncatechars:20 }}</td>
@@ -115,34 +124,39 @@
                   {% if e.has_securite_incendie %}<span class="spec-badge spec-si">SI</span>{% endif %}
                 </div>
               </td>
+              <!-- Rapport -->
               <td class="text-center">
-                <div class="d-flex flex-column gap-1 align-items-center">
-                  <span class="badge-status status-{{ e.rapport_status }}">{{ e.get_rapport_status_display }}</span>
-                  {% with inv=e.get_invoice %}
-                    {% if inv and inv.is_complete %}
-                      <span class="badge bg-success"><i class="bi bi-check2-all"></i> Transmise</span>
-                    {% elif inv and inv.is_established %}
-                      <span class="badge bg-info text-dark">Établie</span>
-                    {% else %}
-                      {% with days=e.invoice_days_remaining %}
-                        {% if days < 0 %}
-                          <span class="badge bg-danger blink">RETARD facture</span>
-                        {% elif days <= 3 %}
-                          <span class="badge bg-danger blink">Facture J-{{ days }}</span>
-                        {% elif days <= 10 %}
-                          <span class="badge bg-warning text-dark">Facture J-{{ days }}</span>
-                        {% else %}
-                          <span class="badge bg-secondary">Facture à faire</span>
-                        {% endif %}
-                      {% endwith %}
-                    {% endif %}
-                  {% endwith %}
-                </div>
+                {% if e.rapport_date %}
+                  <i class="bi bi-check-circle-fill text-success" title="{{ e.rapport_date|date:'d/m/Y' }}"></i>
+                {% else %}
+                  <i class="bi bi-circle text-muted"></i>
+                {% endif %}
               </td>
+              <!-- Rapport final -->
+              <td class="text-center">
+                {% if e.rapport_final_date %}
+                  <i class="bi bi-check-circle-fill text-success" title="{{ e.rapport_final_date|date:'d/m/Y' }}"></i>
+                {% else %}
+                  <i class="bi bi-circle text-muted"></i>
+                {% endif %}
+              </td>
+              <!-- Facture -->
+              <td class="text-center">
+                {% with inv=e.get_invoice %}
+                  {% if inv and inv.is_complete %}
+                    <i class="bi bi-check-circle-fill text-success" title="Transmise le {{ inv.transmission_date|date:'d/m/Y' }}"></i>
+                  {% elif inv and inv.is_established %}
+                    <i class="bi bi-check-circle text-info" title="Établie le {{ inv.establishment_date|date:'d/m/Y' }}, non transmise"></i>
+                  {% else %}
+                    <i class="bi bi-circle text-muted"></i>
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <!-- Échéance rapport (30j) -->
               <td class="text-center small">
-                {% with days=e.invoice_days_remaining %}
+                {% with days=e.rapport_days_remaining %}
                   <div class="{% if days < 0 %}text-danger fw-bold{% elif days <= 3 %}text-danger{% elif days <= 10 %}text-warning{% endif %}">
-                    {{ e.invoice_due_date|date:"d/m/Y" }}
+                    {{ e.rapport_due_date|date:"d/m/Y" }}
                   </div>
                   <div class="text-muted" style="font-size:.7rem;">
                     {% if days < 0 %}Retard {{ days|cut:"-" }}j
@@ -174,7 +188,7 @@
             </tr>
             {% empty %}
             <tr>
-              <td colspan="9" class="text-center text-muted py-5">
+              <td colspan="11" class="text-center text-muted py-5">
                 <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                 Aucune expertise trouvée.
                 <a href="{% url 'expertise_create' %}">Créer la première expertise</a>

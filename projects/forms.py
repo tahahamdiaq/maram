@@ -11,7 +11,7 @@ class ProjectForm(forms.ModelForm):
             'name', 'bon_commande_number', 'bon_commande_date',
             'gouvernorat', 'maitre_ouvrage',
             # Spécialités
-            'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie',
+            'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie', 'has_vrd',
             # Ingénieurs
             'engineers',
             # Visites
@@ -21,10 +21,11 @@ class ProjectForm(forms.ModelForm):
             'dao_electricite', 'dao_electricite_received_date', 'dao_electricite_decision_date',
             'dao_fluide', 'dao_fluide_received_date', 'dao_fluide_decision_date',
             'dao_securite_incendie', 'dao_securite_incendie_received_date', 'dao_securite_incendie_decision_date',
+            'dao_vrd', 'dao_vrd_received_date', 'dao_vrd_decision_date',
             # D0
             'd0_done', 'd0_date',
-            # EXE
-            'exe_structure', 'exe_structure_received_date', 'exe_structure_decision_date',
+            # EXE – VRD replaces Structure
+            'exe_vrd', 'exe_vrd_received_date', 'exe_vrd_decision_date',
             'exe_electricite', 'exe_electricite_received_date', 'exe_electricite_decision_date',
             'exe_fluide', 'exe_fluide_received_date', 'exe_fluide_decision_date',
             'exe_securite_incendie', 'exe_securite_incendie_received_date', 'exe_securite_incendie_decision_date',
@@ -44,8 +45,10 @@ class ProjectForm(forms.ModelForm):
             'dao_fluide_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dao_securite_incendie_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'dao_securite_incendie_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'exe_structure_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
-            'exe_structure_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'dao_vrd_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'dao_vrd_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'exe_vrd_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'exe_vrd_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'exe_electricite_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'exe_electricite_decision_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'exe_fluide_received_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
@@ -68,7 +71,8 @@ class ProjectForm(forms.ModelForm):
             'dao_electricite_received_date', 'dao_electricite_decision_date',
             'dao_fluide_received_date', 'dao_fluide_decision_date',
             'dao_securite_incendie_received_date', 'dao_securite_incendie_decision_date',
-            'exe_structure_received_date', 'exe_structure_decision_date',
+            'dao_vrd_received_date', 'dao_vrd_decision_date',
+            'exe_vrd_received_date', 'exe_vrd_decision_date',
             'exe_electricite_received_date', 'exe_electricite_decision_date',
             'exe_fluide_received_date', 'exe_fluide_decision_date',
             'exe_securite_incendie_received_date', 'exe_securite_incendie_decision_date',
@@ -77,8 +81,8 @@ class ProjectForm(forms.ModelForm):
             self.fields[field_name].required = False
 
         # DAO/EXE fields: not selectable manually as "non_prevu" — set automatically
-        for f in ['dao_structure', 'dao_electricite', 'dao_fluide', 'dao_securite_incendie',
-                  'exe_structure', 'exe_electricite', 'exe_fluide', 'exe_securite_incendie']:
+        for f in ['dao_structure', 'dao_electricite', 'dao_fluide', 'dao_securite_incendie', 'dao_vrd',
+                  'exe_vrd', 'exe_electricite', 'exe_fluide', 'exe_securite_incendie']:
             self.fields[f].required = False
             self.fields[f].choices = DOSSIER_STATUS_CHOICES
 
@@ -91,19 +95,21 @@ class ProjectForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         # At least one specialty required
-        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide'), cleaned.get('has_securite_incendie')]):
+        if not any([cleaned.get('has_structure'), cleaned.get('has_electricite'), cleaned.get('has_fluide'), cleaned.get('has_securite_incendie'), cleaned.get('has_vrd')]):
             raise forms.ValidationError("Veuillez sélectionner au moins une spécialité.")
 
         # Auto-set non_prevu for specialties absent from this project
         for specialty, dao_field, exe_field in [
-            ('has_structure',         'dao_structure',         'exe_structure'),
+            ('has_structure',         'dao_structure',         None),
             ('has_electricite',       'dao_electricite',       'exe_electricite'),
             ('has_fluide',            'dao_fluide',            'exe_fluide'),
             ('has_securite_incendie', 'dao_securite_incendie', 'exe_securite_incendie'),
+            ('has_vrd',               'dao_vrd',               'exe_vrd'),
         ]:
             if not cleaned.get(specialty):
                 cleaned[dao_field] = 'non_prevu'
-                cleaned[exe_field] = 'non_prevu'
+                if exe_field:
+                    cleaned[exe_field] = 'non_prevu'
 
         # D0: if marked done, date is required
         if cleaned.get('d0_done') and not cleaned.get('d0_date'):
@@ -221,11 +227,13 @@ class ExpertiseForm(forms.ModelForm):
             'gouvernorat', 'maitre_ouvrage',
             'has_structure', 'has_electricite', 'has_fluide', 'has_securite_incendie',
             'engineers',
-            'rapport_status',
+            'rapport_status', 'rapport_date', 'rapport_final_date',
         ]
         widgets = {
             'bon_commande_number': forms.TextInput(attrs={'maxlength': '5', 'pattern': '[0-9]{5}', 'inputmode': 'numeric', 'placeholder': '12345'}),
             'bon_commande_date':   forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'rapport_date':        forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
+            'rapport_final_date':  forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
             'engineers':           forms.CheckboxSelectMultiple(),
             'maitre_ouvrage':      forms.TextInput(attrs={'list': 'maitre-ouvrage-list'}),
         }
@@ -283,8 +291,8 @@ class ExpertiseFilterForm(forms.Form):
         required=False,
         choices=[
             ('', 'Tous les statuts'),
-            ('non_effectue', 'Non encore effectué'),
             ('en_cours', 'En cours'),
+            ('cloturee', 'Clôturée'),
         ],
         widget=forms.Select(attrs={'class': 'form-select'})
     )

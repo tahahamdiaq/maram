@@ -244,55 +244,80 @@ def check_project_notifications(project):
 def check_expertise_notifications(expertise):
     today = date.today()
     active = _active_types_expertise(expertise)
-    facture_types = [
-        'expertise_facture_ready', 'expertise_facture_j10',
-        'expertise_facture_j3', 'expertise_facture_overdue',
-    ]
 
+    rapport_types = [
+        'expertise_rapport_ready', 'expertise_rapport_j10',
+        'expertise_rapport_j3', 'expertise_rapport_overdue',
+    ]
+    facture_types = ['expertise_facture_ready', 'expertise_facture_overdue']
+
+    # ── Rapport (30j from bon_commande_date) ─────────────────────────────────
+    # Stop countdown once rapport is submitted (date entered) or expertise closed
+    if expertise.rapport_date or expertise.rapport_status == 'cloturee':
+        _resolve_expertise_notifications(expertise, rapport_types)
+    else:
+        rapport_due = expertise.rapport_due_date
+        rapport_days = (rapport_due - today).days
+
+        if rapport_days < 0:
+            if 'expertise_rapport_overdue' not in active:
+                _resolve_expertise_notifications(expertise, [
+                    'expertise_rapport_ready', 'expertise_rapport_j10', 'expertise_rapport_j3'
+                ])
+                _create_expertise(expertise, 'expertise_rapport_overdue', 'critique',
+                    f'RETARD – Rapport expertise en retard de {-rapport_days} jour(s) pour "{expertise.name}".')
+        elif rapport_days <= 3:
+            _resolve_expertise_notifications(expertise, ['expertise_rapport_overdue'])
+            if 'expertise_rapport_j3' not in active:
+                _resolve_expertise_notifications(expertise, [
+                    'expertise_rapport_ready', 'expertise_rapport_j10'
+                ])
+                _create_expertise(expertise, 'expertise_rapport_j3', 'critique',
+                    f'URGENT – Il reste {rapport_days} jour(s) pour déposer le rapport de l\'expertise '
+                    f'"{expertise.name}" (échéance : {rapport_due.strftime("%d/%m/%Y")}).')
+        elif rapport_days <= 10:
+            _resolve_expertise_notifications(expertise, ['expertise_rapport_j3', 'expertise_rapport_overdue'])
+            if 'expertise_rapport_j10' not in active:
+                _resolve_expertise_notifications(expertise, ['expertise_rapport_ready'])
+                _create_expertise(expertise, 'expertise_rapport_j10', 'important',
+                    f'Rappel – {rapport_days} jour(s) restants pour le rapport de l\'expertise '
+                    f'"{expertise.name}" (échéance : {rapport_due.strftime("%d/%m/%Y")}).')
+        else:
+            _resolve_expertise_notifications(expertise, [
+                'expertise_rapport_j10', 'expertise_rapport_j3', 'expertise_rapport_overdue'
+            ])
+            if 'expertise_rapport_ready' not in active:
+                _create_expertise(expertise, 'expertise_rapport_ready', 'info',
+                    f'Rapport expertise à déposer pour "{expertise.name}" '
+                    f'(avant le {rapport_due.strftime("%d/%m/%Y")}).')
+
+    # ── Facture (dès que rapport_final_date est saisie) ──────────────────────
     invoice = expertise.get_invoice
 
-    # Invoice established + transmitted → resolve all, nothing more to do
-    if invoice and invoice.is_complete:
+    # Resolve when facture is complete or expertise is closed
+    if expertise.rapport_status == 'cloturee' or (invoice and invoice.is_complete):
         _resolve_expertise_notifications(expertise, facture_types)
         return
 
-    due_date = expertise.invoice_due_date
-    days = (due_date - today).days
+    # No rapport final date yet → no facture notification
+    if not expertise.rapport_final_date:
+        _resolve_expertise_notifications(expertise, facture_types)
+        return
 
-    if days < 0:
+    # rapport_final_date is set → facture should be established
+    # If rapport_final_date is in the past → overdue, otherwise just ready
+    if expertise.rapport_final_date < today:
         if 'expertise_facture_overdue' not in active:
-            _resolve_expertise_notifications(expertise, [
-                'expertise_facture_ready', 'expertise_facture_j10', 'expertise_facture_j3'
-            ])
-            _create_expertise(expertise, 'expertise_facture_overdue', 'critique',
-                f'RETARD – Facture expertise en retard de {-days} jour(s) pour "{expertise.name}".')
-    elif days <= 3:
-        # Resolve stale overdue if date was pushed forward
-        _resolve_expertise_notifications(expertise, ['expertise_facture_overdue'])
-        if 'expertise_facture_j3' not in active:
-            _resolve_expertise_notifications(expertise, [
-                'expertise_facture_ready', 'expertise_facture_j10'
-            ])
-            _create_expertise(expertise, 'expertise_facture_j3', 'critique',
-                f'URGENT – Il reste {days} jour(s) pour établir la facture de l\'expertise '
-                f'"{expertise.name}" (échéance : {due_date.strftime("%d/%m/%Y")}).')
-    elif days <= 10:
-        # Resolve stale j3/overdue if date was pushed forward
-        _resolve_expertise_notifications(expertise, ['expertise_facture_j3', 'expertise_facture_overdue'])
-        if 'expertise_facture_j10' not in active:
             _resolve_expertise_notifications(expertise, ['expertise_facture_ready'])
-            _create_expertise(expertise, 'expertise_facture_j10', 'important',
-                f'Rappel – {days} jour(s) restants pour la facture de l\'expertise '
-                f'"{expertise.name}" (échéance : {due_date.strftime("%d/%m/%Y")}).')
+            _create_expertise(expertise, 'expertise_facture_overdue', 'critique',
+                f'RETARD – Facture expertise à établir pour "{expertise.name}" '
+                f'(rapport final déposé le {expertise.rapport_final_date.strftime("%d/%m/%Y")}).')
     else:
-        # Due date far away — resolve any stale urgent notifications if date was pushed forward
-        _resolve_expertise_notifications(expertise, [
-            'expertise_facture_j10', 'expertise_facture_j3', 'expertise_facture_overdue'
-        ])
+        _resolve_expertise_notifications(expertise, ['expertise_facture_overdue'])
         if 'expertise_facture_ready' not in active:
             _create_expertise(expertise, 'expertise_facture_ready', 'important',
                 f'Facture expertise à établir pour "{expertise.name}" '
-                f'(avant le {due_date.strftime("%d/%m/%Y")}).')
+                f'– rapport final déposé le {expertise.rapport_final_date.strftime("%d/%m/%Y")}.')
 
 
 def check_all_notifications():

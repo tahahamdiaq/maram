@@ -60,10 +60,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'maram_project.wsgi.application'
 
-# Database – use DATABASE_URL on Render, individual vars locally
+# Database – DATABASE_URL wins (production); USE_SQLITE=True for local dev without PostgreSQL
 DATABASE_URL = os.environ.get('DATABASE_URL')
+USE_SQLITE = config('USE_SQLITE', default=False, cast=bool)
+
 if DATABASE_URL:
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+elif USE_SQLITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 else:
     DATABASES = {
         'default': {
