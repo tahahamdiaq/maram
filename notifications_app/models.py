@@ -17,11 +17,14 @@ NOTIFICATION_TYPES = [
     ('exe_str_alerte',    'EXE Structure – dossier en attente'),
     ('exe_elec_alerte',   'EXE Électricité – dossier en attente'),
     ('exe_fl_alerte',     'EXE Fluide – dossier en attente'),
-    # Expertise rapport alerts
-    ('expertise_facture_ready',   'Expertise – Rapport à établir'),
-    ('expertise_facture_j10',     'Expertise – Rappel Rapport J-10'),
-    ('expertise_facture_j3',      'Expertise – Rappel Rapport J-3'),
-    ('expertise_facture_overdue', 'Expertise – Rapport en retard'),
+    # Expertise – rapport countdown
+    ('expertise_rapport_ready',   'Expertise – Rapport à déposer'),
+    ('expertise_rapport_j10',     'Expertise – Rapport J-10'),
+    ('expertise_rapport_j3',      'Expertise – Rapport J-3'),
+    ('expertise_rapport_overdue', 'Expertise – Rapport en retard'),
+    # Expertise – facture
+    ('expertise_facture_ready',   'Expertise – Facture à établir'),
+    ('expertise_facture_overdue', 'Expertise – Facture en retard'),
 ]
 
 PRIORITY_CHOICES = [

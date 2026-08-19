@@ -362,6 +362,7 @@ class Expertise(models.Model):
     engineers = models.ManyToManyField(Engineer, blank=True, verbose_name='Ingénieurs')
 
     RAPPORT_STATUS_CHOICES = [
+        ('non_effectue', 'Non encore effectué'),
         ('en_cours', 'En cours'),
         ('cloturee', 'Clôturée'),
     ]

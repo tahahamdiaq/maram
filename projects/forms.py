@@ -291,6 +291,7 @@ class ExpertiseFilterForm(forms.Form):
         required=False,
         choices=[
             ('', 'Tous les statuts'),
+            ('non_effectue', 'Non encore effectué'),
             ('en_cours', 'En cours'),
             ('cloturee', 'Clôturée'),
         ],
