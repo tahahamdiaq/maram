@@ -117,7 +117,7 @@
               <th>Gouvernorat</th>
               <th>M.O.</th>
               <th class="text-center">Spéc.</th>
-              <th colspan="4" class="text-center border-start border-secondary" style="background:#1a3a5c;">DAO</th>
+              <th colspan="5" class="text-center border-start border-secondary" style="background:#1a3a5c;">DAO</th>
               <th class="text-center border-start border-secondary">D0</th>
               <th colspan="4" class="text-center border-start border-secondary" style="background:#1a3a5c;">EXE</th>
               <th class="text-center border-start border-secondary">Visites</th>
@@ -134,6 +134,7 @@
               <th class="text-center">ELEC</th>
               <th class="text-center">FL</th>
               <th class="text-center">SI</th>
+              <th class="text-center">VRD</th>
               <th class="text-center border-start border-secondary"></th>
               <th class="text-center border-start border-secondary">VRD</th>
               <th class="text-center">ELEC</th>
@@ -195,6 +196,11 @@
               <td class="text-center">
                 {% if p.has_securite_incendie %}
                   <span class="badge-status status-{{ p.dao_securite_incendie }}">{{ p.get_dao_securite_incendie_display }}</span>
+                {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
+              </td>
+              <td class="text-center">
+                {% if p.has_vrd %}
+                  <span class="badge-status status-{{ p.dao_vrd }}">{{ p.get_dao_vrd_display }}</span>
                 {% else %}<span class="badge-status status-non_prevu">Non prévu</span>{% endif %}
               </td>
 

@@ -16,7 +16,7 @@
     </nav>
   </div>
 
-  <form method="post" id="projectForm">
+  <form method="post" id="projectForm" novalidate>
     {% csrf_token %}
 
     <!-- ── Section 1 : Identité ── -->
@@ -47,9 +47,9 @@
       </div>
       <div class="card-body">
         <div class="row g-3">
-          <div class="col-md-4">
+          <div class="col-12">
             <label class="form-label fw-semibold">Spécialités *</label>
-            <div class="d-flex gap-3">
+            <div class="d-flex flex-wrap gap-4">
               <div class="form-check">
                 {{ form.has_structure }} <label class="form-check-label" for="{{ form.has_structure.id_for_label }}">Structure</label>
               </div>
@@ -67,7 +67,7 @@
               </div>
             </div>
           </div>
-          <div class="col-md-8">{{ form.engineers|as_crispy_field }}</div>
+          <div class="col-12">{{ form.engineers|as_crispy_field }}</div>
         </div>
       </div>
     </div>
